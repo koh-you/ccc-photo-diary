@@ -1,0 +1,292 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="theme-color" content="#26332d" />
+    <title>CCC</title>
+    <link rel="manifest" href="./manifest.webmanifest" />
+    <link rel="stylesheet" href="./styles.css" />
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
+    <script src="./app.js" defer></script>
+  </head>
+  <body>
+    <div class="app-shell">
+      <header class="topbar">
+        <button class="back-button" id="backButton" type="button" hidden>←</button>
+        <div>
+          <p class="eyebrow">Capture · Crop · Carving</p>
+          <h1 class="brand-logo" aria-label="CCC">
+            <span>C</span>
+            <span>C</span>
+            <span>C</span>
+          </h1>
+        </div>
+        <div class="top-actions">
+          <button class="secondary-action" id="exportBackupButton" type="button">백업</button>
+          <button class="secondary-action" id="importBackupButton" type="button">가져오기</button>
+          <button class="secondary-action" id="trashToggleButton" type="button">휴지통</button>
+        </div>
+        <input id="backupInput" type="file" accept="application/json" hidden />
+      </header>
+
+      <main>
+        <section class="view is-active" id="homeView" aria-labelledby="homeTitle">
+          <section class="overview-band" aria-label="전체 개요">
+            <div class="overview-title">
+              <p class="eyebrow">Overview</p>
+              <h2 id="homeTitle">전체 개요</h2>
+            </div>
+            <div class="stats-strip" aria-label="기록 통계">
+              <div>
+                <span id="totalCount">0</span>
+                <small>보관</small>
+              </div>
+              <div>
+                <span id="unfinishedCount">0</span>
+                <small>정리 전</small>
+              </div>
+              <div>
+                <span id="todayCount">0</span>
+                <small>오늘</small>
+              </div>
+              <div>
+                <span id="trashCount">0</span>
+                <small>휴지통</small>
+              </div>
+            </div>
+          </section>
+
+          <section class="cloud-panel" aria-labelledby="cloudPanelTitle">
+            <div class="section-heading compact">
+              <div>
+                <p class="eyebrow">Cloud</p>
+                <h2 id="cloudPanelTitle">클라우드 동기화</h2>
+              </div>
+              <span class="status-badge" id="cloudStatusBadge">Local</span>
+            </div>
+            <div class="cloud-grid">
+              <label class="field">
+                <span>로그인 이메일</span>
+                <input id="cloudEmailInput" type="email" autocomplete="email" placeholder="you@example.com" />
+              </label>
+              <div class="cloud-actions">
+                <button class="secondary-action" id="cloudLoginButton" type="button">로그인 링크 받기</button>
+                <button class="secondary-action" id="cloudRefreshButton" type="button">상태 확인</button>
+                <button class="primary-action" id="cloudPushButton" type="button">클라우드 업로드</button>
+                <button class="secondary-action" id="cloudPullButton" type="button">클라우드 가져오기</button>
+                <button class="ghost-button" id="cloudSignOutButton" type="button">로그아웃</button>
+              </div>
+            </div>
+            <p class="cloud-note" id="cloudNote">Supabase와 Vercel 환경변수를 설정하면 iPhone에서 PC 없이 동기화할 수 있습니다.</p>
+          </section>
+
+          <section class="capture-panel" aria-labelledby="captureTitle">
+            <div>
+              <p class="eyebrow">Capture</p>
+              <h2 id="captureTitle">사진 촬영</h2>
+              <p class="panel-copy">먼저 사진을 찍거나 선택한 뒤, 다음 화면에서 정보와 감상을 정리합니다.</p>
+            </div>
+            <div class="capture-actions">
+              <button class="primary-action large" id="homeCameraButton" type="button">카메라로 촬영</button>
+              <button class="secondary-action large" id="homeLibraryButton" type="button">사진 보관함에서 선택</button>
+            </div>
+          </section>
+
+          <section class="album-section" aria-labelledby="albumTitle">
+            <div class="section-heading">
+              <div>
+                <p class="eyebrow">Albums</p>
+                <h2 id="albumTitle">앨범</h2>
+              </div>
+            </div>
+            <div class="album-grid" id="albumGrid"></div>
+          </section>
+        </section>
+
+        <section class="view" id="albumView" aria-labelledby="albumViewTitle">
+          <div class="section-heading">
+            <div>
+              <p class="eyebrow">Album</p>
+              <h2 id="albumViewTitle">앨범</h2>
+            </div>
+            <button class="primary-action" id="albumCaptureButton" type="button">사진 추가</button>
+          </div>
+
+          <label class="search-field">
+            <span class="search-symbol" aria-hidden="true">⌕</span>
+            <input id="searchInput" type="search" placeholder="제목, 감상, 태그 검색" />
+          </label>
+
+          <div class="entry-list" id="entryList"></div>
+        </section>
+
+        <section class="view" id="editorView" aria-labelledby="editorTitle">
+          <section class="editor-pane">
+            <div class="section-heading">
+              <div>
+                <p class="eyebrow">Carving</p>
+                <h2 id="editorTitle">기록 정리</h2>
+              </div>
+              <button class="ghost-button" id="clearFormButton" type="button">초기화</button>
+            </div>
+
+            <form id="entryForm" class="entry-form">
+              <input id="entryId" type="hidden" />
+
+              <div class="photo-input-block">
+                <div class="photo-dropzone" id="photoDropzone">
+                  <span class="photo-placeholder" id="photoPlaceholder">
+                    <span class="photo-icon" aria-hidden="true">□</span>
+                    여러 사진 원본 보존
+                  </span>
+                  <img id="photoPreview" class="photo-preview" alt="" hidden />
+                </div>
+                <div class="photo-strip" id="photoStrip" aria-label="선택한 사진 목록"></div>
+                <div class="photo-actions">
+                  <button class="secondary-action" id="cameraButton" type="button">사진 촬영/추가</button>
+                  <button class="secondary-action" id="libraryButton" type="button">사진 선택/추가</button>
+                  <button class="secondary-action" id="clearPhotosButton" type="button">사진 비우기</button>
+                </div>
+                <input id="cameraInput" type="file" accept="image/*" capture="environment" hidden />
+                <input id="libraryInput" type="file" accept="image/*" multiple hidden />
+                <div class="metadata-panel" id="metadataPanel" hidden></div>
+              </div>
+
+              <fieldset class="category-group">
+                <legend>카테고리</legend>
+                <div class="segmented-control" id="categoryControl">
+                  <button type="button" class="segment is-active" data-category="food">음식</button>
+                  <button type="button" class="segment" data-category="wine">와인</button>
+                  <button type="button" class="segment" data-category="culture">문화예술</button>
+                  <button type="button" class="segment" data-category="math">수학문제</button>
+                </div>
+              </fieldset>
+
+              <section class="ai-panel" aria-labelledby="aiPanelTitle">
+                <div>
+                  <p class="eyebrow">AI Draft</p>
+                  <h3 id="aiPanelTitle">AI로 초안 만들기</h3>
+                </div>
+                <div class="field-grid">
+                  <label class="field">
+                    <span>OpenAI API 키</span>
+                    <input id="apiKeyInput" type="password" autocomplete="off" placeholder="서버 환경변수 대신 임시 입력 가능" />
+                  </label>
+                  <label class="field">
+                    <span>모델</span>
+                    <input id="apiModelInput" type="text" autocomplete="off" value="gpt-5.5" />
+                  </label>
+                </div>
+                <div class="api-key-row">
+                  <label class="check-field">
+                    <input id="rememberApiKeyInput" type="checkbox" />
+                    <span>이 기기에 API 키 저장</span>
+                  </label>
+                  <button class="ghost-button" id="clearSavedApiKeyButton" type="button">저장된 키 삭제</button>
+                </div>
+                <label class="field">
+                  <span>AI에게 요청할 내용</span>
+                  <textarea id="aiPromptInput" rows="3" placeholder="예: 와인 라벨을 보고 항목을 채워줘. 테이스팅 노트는 초안으로 적어줘."></textarea>
+                </label>
+                <div class="ai-actions">
+                  <button class="primary-action" id="runAiButton" type="button">AI 호출</button>
+                  <button class="secondary-action" id="applyAiButton" type="button" disabled>AI 초안 반영</button>
+                  <button class="secondary-action" id="checkAiServerButton" type="button">서버 확인</button>
+                </div>
+                <pre class="ai-result" id="aiResult" hidden></pre>
+              </section>
+
+              <div class="field-grid">
+                <label class="field">
+                  <span>제목</span>
+                  <input id="titleInput" type="text" autocomplete="off" placeholder="비워두어도 저장됩니다" />
+                </label>
+
+                <label class="field">
+                  <span>장소</span>
+                  <input id="locationInput" type="text" autocomplete="off" placeholder="EXIF GPS가 있으면 자동 입력" />
+                </label>
+              </div>
+
+              <div class="field-grid">
+                <label class="field">
+                  <span>촬영 날짜</span>
+                  <input id="capturedDateInput" type="date" />
+                </label>
+
+                <label class="field">
+                  <span>촬영 시간</span>
+                  <input id="capturedTimeInput" type="time" />
+                </label>
+              </div>
+
+              <label class="field">
+                <span>짧은 코멘트</span>
+                <textarea id="quickCommentInput" rows="3" placeholder="현장에서 빠르게 남기는 메모"></textarea>
+              </label>
+
+              <label class="field">
+                <span>상세 코멘트</span>
+                <textarea id="detailedCommentInput" rows="4" placeholder="나중에 정리하는 정보와 맥락"></textarea>
+              </label>
+
+              <label class="field">
+                <span>감상</span>
+                <textarea id="reflectionInput" rows="4" placeholder="실제로 어떻게 느꼈는지"></textarea>
+              </label>
+
+              <label class="field">
+                <span>태그</span>
+                <input id="tagsInput" type="text" autocomplete="off" placeholder="예: 점심, 산미, 오답" />
+              </label>
+
+              <section class="category-details" aria-labelledby="categoryDetailsTitle">
+                <div class="section-heading compact">
+                  <div>
+                    <p class="eyebrow">Details</p>
+                    <h3 id="categoryDetailsTitle">음식 정보</h3>
+                  </div>
+                </div>
+                <div id="categoryFields" class="category-fields"></div>
+              </section>
+
+              <div class="form-actions">
+                <button class="primary-action" id="saveButton" type="submit">저장</button>
+                <button class="secondary-action" id="cancelEditButton" type="button" hidden>수정 취소</button>
+              </div>
+            </form>
+          </section>
+        </section>
+      </main>
+    </div>
+
+    <dialog id="detailDialog" class="detail-dialog">
+      <article class="detail-content">
+        <header class="detail-header">
+          <div>
+            <span class="category-badge" id="detailCategory"></span>
+            <h2 id="detailTitle"></h2>
+            <p id="detailDate" class="muted"></p>
+          </div>
+          <button class="icon-button" id="closeDetailButton" type="button" aria-label="닫기">×</button>
+        </header>
+        <img id="detailPhoto" class="detail-photo" alt="" hidden />
+        <div id="detailGallery" class="detail-gallery"></div>
+        <dl class="detail-list" id="detailList"></dl>
+        <div class="detail-actions" id="activeDetailActions">
+          <button class="primary-action" id="editEntryButton" type="button">수정</button>
+          <button class="secondary-action" id="printPdfButton" type="button">PDF 저장</button>
+          <button class="secondary-action" id="saveOriginalButton" type="button">원본 사진 저장/공유</button>
+          <button class="danger-action" id="deleteEntryButton" type="button">휴지통으로</button>
+        </div>
+        <div class="detail-actions" id="trashDetailActions" hidden>
+          <button class="primary-action" id="restoreEntryButton" type="button">복원</button>
+          <button class="danger-action" id="permanentDeleteButton" type="button">완전 삭제</button>
+        </div>
+      </article>
+    </dialog>
+
+    <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
+  </body>
+</html>

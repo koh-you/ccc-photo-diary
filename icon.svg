@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <defs>
+    <linearGradient id="sea" x1="90" y1="40" x2="420" y2="470" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#13c6ff"/>
+      <stop offset="0.48" stop-color="#00b7eb"/>
+      <stop offset="1" stop-color="#00d6c8"/>
+    </linearGradient>
+    <linearGradient id="tube" x1="150" y1="130" x2="360" y2="360" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#ffffff"/>
+      <stop offset="0.36" stop-color="#ffe45e"/>
+      <stop offset="1" stop-color="#ff5c35"/>
+    </linearGradient>
+    <pattern id="tiles" width="64" height="64" patternUnits="userSpaceOnUse">
+      <path d="M64 0H0v64" fill="none" stroke="#fff" stroke-opacity=".26" stroke-width="6"/>
+    </pattern>
+  </defs>
+  <rect width="512" height="512" rx="110" fill="url(#sea)"/>
+  <rect width="512" height="512" rx="110" fill="url(#tiles)"/>
+  <circle cx="94" cy="92" r="54" fill="#ffe45e"/>
+  <path d="M54 352c74-42 132-42 198 0s126 42 218-12v104H54z" fill="#fffef2" opacity=".82"/>
+  <path d="M80 310c58-22 106-20 160 4s104 23 184-8" fill="none" stroke="#fff" stroke-width="14" stroke-linecap="round" opacity=".72"/>
+  <g fill="url(#tube)" stroke="#fff" stroke-width="12" stroke-linejoin="round">
+    <path d="M205 177c-18-22-58-24-84-2-34 29-34 93 0 122 26 22 66 20 84-2l-34-36c-7 10-18 13-29 7-17-9-17-50 0-59 11-6 22-3 29 7z"/>
+    <path d="M319 177c-18-22-58-24-84-2-34 29-34 93 0 122 26 22 66 20 84-2l-34-36c-7 10-18 13-29 7-17-9-17-50 0-59 11-6 22-3 29 7z"/>
+    <path d="M433 177c-18-22-58-24-84-2-34 29-34 93 0 122 26 22 66 20 84-2l-34-36c-7 10-18 13-29 7-17-9-17-50 0-59 11-6 22-3 29 7z"/>
+  </g>
+  <g fill="#ffffff" opacity=".82">
+    <path d="M130 118c22-14 48-17 76-8" fill="none" stroke="#fff" stroke-width="12" stroke-linecap="round"/>
+    <rect x="78" y="76" width="38" height="38" rx="19"/>
+    <rect x="404" y="92" width="24" height="24" rx="12"/>
+  </g>
+</svg>
