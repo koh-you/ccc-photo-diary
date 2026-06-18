@@ -1,4 +1,4 @@
-const CACHE_NAME = "ccc-local-mvp-v16";
+const CACHE_NAME = "ccc-local-mvp-v17";
 const ASSETS = [
   "./",
   "./index.html",

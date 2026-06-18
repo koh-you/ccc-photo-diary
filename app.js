@@ -1070,14 +1070,14 @@ async function initCloud() {
   const savedEmail = localStorage.getItem(CLOUD_EMAIL_STORAGE_KEY) || "";
   if (elements.cloudEmailInput) elements.cloudEmailInput.value = savedEmail;
   cloudAuthNotice = readCloudAuthRedirectNotice();
-  updateCloudUi("Local", "클라우드 설정을 불러오는 중입니다.");
+  updateCloudUi("Local", "클라우드 설정을 확인하는 중입니다.");
   if (cloudAuthNotice) {
     updateCloudUi("Auth", cloudAuthNotice.note);
     showToast(cloudAuthNotice.toast);
   }
 
   if (window.location.protocol === "file:") {
-    updateCloudUi("Local", "클라우드 동기화는 HTTPS 주소에서 사용할 수 있습니다.");
+    updateCloudUi("Local", "클라우드 저장은 HTTPS 주소에서 사용할 수 있습니다.");
     return;
   }
 
@@ -1087,7 +1087,7 @@ async function initCloud() {
 
     cloudConfig = await response.json();
     if (!cloudConfig.hasSupabase || !cloudConfig.supabaseUrl || !cloudConfig.supabaseAnonKey) {
-      updateCloudUi("Local", "Vercel에 Supabase 환경변수를 설정하면 클라우드 동기화가 켜집니다.");
+      updateCloudUi("Local", "Vercel에 Supabase 환경변수를 설정하면 자동 클라우드 저장이 켜집니다.");
       return;
     }
 
@@ -1143,10 +1143,10 @@ function updateCloudUi(statusOverride = null, noteOverride = null) {
   elements.cloudStatusBadge.classList.toggle("is-online", signedIn);
   elements.cloudStatusBadge.classList.toggle("is-offline", !configured);
   elements.cloudSummaryCopy.textContent = signedIn
-    ? "자동 저장이 켜져 있습니다. 복구나 수동 동기화가 필요할 때 펼치세요."
+    ? "로그인 유지 중입니다. 기록은 저장할 때 자동 보관됩니다."
     : configured
-      ? "로그인하면 저장할 때마다 Supabase에 자동 보관됩니다."
-      : "Supabase 설정이 필요합니다. 설정과 상태 확인을 위해 펼치세요.";
+      ? "한 번 로그인하면 세션이 유지되고 자동 보관됩니다."
+      : "Supabase 설정과 복구 메뉴가 필요할 때만 엽니다.";
   elements.cloudNote.textContent = note;
   elements.cloudLoginButton.disabled = cloudBusy || !configured || signedIn;
   elements.cloudRefreshButton.disabled = cloudBusy || !configured;

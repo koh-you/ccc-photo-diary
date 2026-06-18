@@ -2339,3 +2339,86 @@ h2 {
     font-size: 0.84rem;
   }
 }
+
+/* Quiet cloud settings shelf */
+.cloud-settings {
+  margin-top: 20px;
+  margin-bottom: 0;
+  border-width: 1px;
+  border-color: rgba(46, 56, 55, 0.2);
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.72), rgba(247, 249, 246, 0.58)),
+    rgba(255, 255, 255, 0.52);
+  box-shadow: none;
+}
+
+.cloud-settings::before {
+  opacity: 0.45;
+}
+
+.cloud-summary {
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  min-height: 58px;
+  padding: 12px 14px;
+  gap: 10px;
+}
+
+.cloud-summary::after {
+  content: "설정";
+  grid-column: auto;
+  align-self: center;
+  padding: 6px 10px;
+  border: 1px solid rgba(46, 56, 55, 0.18);
+  border-radius: 999px;
+  color: var(--ink);
+  background: rgba(255, 254, 250, 0.74);
+  font-size: 0.72rem;
+  letter-spacing: 0;
+}
+
+.cloud-settings[open] .cloud-summary::after {
+  content: "접기";
+}
+
+.cloud-summary .eyebrow {
+  display: none;
+}
+
+.cloud-summary h2 {
+  font-size: 0.98rem;
+}
+
+.cloud-summary-copy {
+  margin-top: 2px;
+  font-size: 0.78rem;
+  font-weight: 680;
+}
+
+.cloud-controls {
+  border-top: 1px solid rgba(46, 56, 55, 0.12);
+  padding: 0 14px 14px;
+}
+
+.cloud-settings:not([open]) {
+  margin-bottom: 0;
+}
+
+@media (max-width: 560px) {
+  .cloud-settings {
+    margin-top: 16px;
+  }
+
+  .cloud-summary {
+    grid-template-columns: minmax(0, 1fr) auto;
+    min-height: 54px;
+    padding: 11px 12px;
+  }
+
+  .cloud-summary::after {
+    display: none;
+  }
+
+  .cloud-summary-copy {
+    font-size: 0.74rem;
+  }
+}
