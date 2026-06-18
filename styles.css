@@ -3236,3 +3236,179 @@ body[data-theme="cube"] .cloud-settings {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
+
+/* Home dashboard refinement */
+body[data-theme="cube"] .topbar {
+  grid-template-columns: auto minmax(0, 1fr);
+  margin-bottom: 14px;
+}
+
+body[data-theme="cube"] .home-dashboard {
+  display: grid;
+  grid-template-columns: minmax(250px, 0.74fr) minmax(0, 1.26fr);
+  gap: 14px;
+  align-items: stretch;
+  margin-bottom: 14px;
+}
+
+body[data-theme="cube"] .home-dashboard .capture-panel,
+body[data-theme="cube"] .home-dashboard .album-section {
+  margin-bottom: 0;
+}
+
+body[data-theme="cube"] .home-capture {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  align-content: space-between;
+  min-height: 308px;
+}
+
+body[data-theme="cube"] .home-capture .panel-copy,
+body[data-theme="cube"] .context-strip .panel-copy,
+body[data-theme="cube"] .local-recovery .panel-copy {
+  margin: 7px 0 0;
+}
+
+body[data-theme="cube"] .home-capture .capture-actions {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 8px;
+  border: 0;
+  background: transparent;
+  padding: 0;
+}
+
+body[data-theme="cube"] .home-albums {
+  display: grid;
+  gap: 12px;
+}
+
+body[data-theme="cube"] .home-albums .section-heading {
+  margin-bottom: 0;
+}
+
+body[data-theme="cube"] .home-albums .album-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+body[data-theme="cube"] .home-albums .album-card {
+  min-height: 0;
+  padding: 10px;
+}
+
+body[data-theme="cube"] .home-albums .album-cover {
+  min-height: 0;
+  height: 88px;
+  margin-bottom: 9px;
+}
+
+body[data-theme="cube"] .home-albums .album-body h3 {
+  font-size: 0.98rem;
+}
+
+body[data-theme="cube"] .home-albums .album-body p {
+  font-size: 0.9rem;
+}
+
+body[data-theme="cube"] .context-strip {
+  display: grid;
+  grid-template-columns: minmax(180px, 0.72fr) minmax(0, 1.28fr);
+  gap: 14px;
+  align-items: center;
+  padding: 16px;
+  margin-bottom: 14px;
+}
+
+body[data-theme="cube"] .context-strip h2 {
+  font-size: clamp(1.08rem, 2vw, 1.28rem);
+}
+
+body[data-theme="cube"] .context-strip .stats-strip {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+body[data-theme="cube"] .local-recovery {
+  display: grid;
+  grid-template-columns: minmax(200px, 0.7fr) minmax(0, 1.3fr);
+  gap: 12px;
+  align-items: end;
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid rgba(29, 103, 189, 0.18);
+}
+
+body[data-theme="cube"] .local-recovery h3 {
+  margin: 0;
+  color: #12345b;
+  font-size: 1.05rem;
+}
+
+body[data-theme="cube"] .recovery-actions {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+body[data-theme="cube"] .home-dashboard *,
+body[data-theme="cube"] .context-strip *,
+body[data-theme="cube"] .local-recovery * {
+  min-width: 0;
+  writing-mode: horizontal-tb;
+  word-break: keep-all;
+}
+
+@media (max-width: 820px) {
+  body[data-theme="cube"] .home-dashboard {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  body[data-theme="cube"] .home-capture {
+    min-height: 0;
+    gap: 14px;
+  }
+
+  body[data-theme="cube"] .context-strip,
+  body[data-theme="cube"] .local-recovery {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 640px) {
+  body[data-theme="cube"] .home-dashboard {
+    gap: 10px;
+    margin-bottom: 10px;
+  }
+
+  body[data-theme="cube"] .home-dashboard .capture-panel,
+  body[data-theme="cube"] .home-dashboard .album-section,
+  body[data-theme="cube"] .context-strip {
+    padding: 14px;
+  }
+
+  body[data-theme="cube"] .home-albums .album-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  body[data-theme="cube"] .home-albums .album-cover {
+    height: 74px;
+  }
+
+  body[data-theme="cube"] .context-strip .stats-strip {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  body[data-theme="cube"] .cloud-settings {
+    margin-top: 12px;
+  }
+
+  body[data-theme="cube"] .recovery-actions {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 380px) {
+  body[data-theme="cube"] .home-albums .album-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
