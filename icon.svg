@@ -1,32 +1,37 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
   <defs>
-    <linearGradient id="sea" x1="90" y1="40" x2="420" y2="470" gradientUnits="userSpaceOnUse">
-      <stop offset="0" stop-color="#13c6ff"/>
-      <stop offset="0.48" stop-color="#00b7eb"/>
-      <stop offset="1" stop-color="#00d6c8"/>
+    <linearGradient id="night" x1="68" y1="34" x2="438" y2="478" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#26333a"/>
+      <stop offset="0.48" stop-color="#101820"/>
+      <stop offset="1" stop-color="#05090d"/>
     </linearGradient>
-    <linearGradient id="tube" x1="150" y1="130" x2="360" y2="360" gradientUnits="userSpaceOnUse">
+    <linearGradient id="snow" x1="110" y1="110" x2="430" y2="394" gradientUnits="userSpaceOnUse">
       <stop offset="0" stop-color="#ffffff"/>
-      <stop offset="0.36" stop-color="#ffe45e"/>
-      <stop offset="1" stop-color="#ff5c35"/>
+      <stop offset="0.52" stop-color="#dbe9ed"/>
+      <stop offset="1" stop-color="#8aa1aa"/>
     </linearGradient>
-    <pattern id="tiles" width="64" height="64" patternUnits="userSpaceOnUse">
-      <path d="M64 0H0v64" fill="none" stroke="#fff" stroke-opacity=".26" stroke-width="6"/>
+    <linearGradient id="ice" x1="120" y1="128" x2="386" y2="366" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#f8fdff"/>
+      <stop offset="0.44" stop-color="#bdebf6"/>
+      <stop offset="1" stop-color="#5d7a86"/>
+    </linearGradient>
+    <pattern id="cutlines" width="52" height="52" patternUnits="userSpaceOnUse">
+      <path d="M52 0 0 52M16 0 0 16M52 36 36 52" fill="none" stroke="#d9edf2" stroke-opacity=".18" stroke-width="5"/>
     </pattern>
   </defs>
-  <rect width="512" height="512" rx="110" fill="url(#sea)"/>
-  <rect width="512" height="512" rx="110" fill="url(#tiles)"/>
-  <circle cx="94" cy="92" r="54" fill="#ffe45e"/>
-  <path d="M54 352c74-42 132-42 198 0s126 42 218-12v104H54z" fill="#fffef2" opacity=".82"/>
-  <path d="M80 310c58-22 106-20 160 4s104 23 184-8" fill="none" stroke="#fff" stroke-width="14" stroke-linecap="round" opacity=".72"/>
-  <g fill="url(#tube)" stroke="#fff" stroke-width="12" stroke-linejoin="round">
-    <path d="M205 177c-18-22-58-24-84-2-34 29-34 93 0 122 26 22 66 20 84-2l-34-36c-7 10-18 13-29 7-17-9-17-50 0-59 11-6 22-3 29 7z"/>
-    <path d="M319 177c-18-22-58-24-84-2-34 29-34 93 0 122 26 22 66 20 84-2l-34-36c-7 10-18 13-29 7-17-9-17-50 0-59 11-6 22-3 29 7z"/>
-    <path d="M433 177c-18-22-58-24-84-2-34 29-34 93 0 122 26 22 66 20 84-2l-34-36c-7 10-18 13-29 7-17-9-17-50 0-59 11-6 22-3 29 7z"/>
+  <rect width="512" height="512" rx="72" fill="url(#night)"/>
+  <rect width="512" height="512" rx="72" fill="url(#cutlines)"/>
+  <path d="M44 360 154 182l58 86 76-148 180 240v84H44z" fill="url(#snow)"/>
+  <path d="M154 182 212 268 177 256 144 320 84 360zM288 120l78 104-55-18-57 116-42-54z" fill="#ffffff" opacity=".88"/>
+  <path d="M62 365h388" stroke="#e54b3c" stroke-width="12" stroke-linecap="square"/>
+  <g fill="none" stroke="url(#ice)" stroke-width="32" stroke-linecap="square" stroke-linejoin="miter">
+    <path d="M192 214c-22-35-86-28-96 20-11 54 36 92 88 66"/>
+    <path d="M304 214c-22-35-86-28-96 20-11 54 36 92 88 66"/>
+    <path d="M416 214c-22-35-86-28-96 20-11 54 36 92 88 66"/>
   </g>
-  <g fill="#ffffff" opacity=".82">
-    <path d="M130 118c22-14 48-17 76-8" fill="none" stroke="#fff" stroke-width="12" stroke-linecap="round"/>
-    <rect x="78" y="76" width="38" height="38" rx="19"/>
-    <rect x="404" y="92" width="24" height="24" rx="12"/>
+  <g fill="none" stroke="#101820" stroke-width="9" stroke-linecap="square" opacity=".55">
+    <path d="M192 214c-22-35-86-28-96 20-11 54 36 92 88 66"/>
+    <path d="M304 214c-22-35-86-28-96 20-11 54 36 92 88 66"/>
+    <path d="M416 214c-22-35-86-28-96 20-11 54 36 92 88 66"/>
   </g>
 </svg>

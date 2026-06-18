@@ -3,9 +3,9 @@
   "short_name": "CCC",
   "start_url": "./index.html",
   "display": "standalone",
-  "background_color": "#f4f5f2",
-  "theme_color": "#26332d",
-  "description": "Capture, Crop, Carving. 사진과 감상을 로컬에 보관하는 조용한 아카이브.",
+  "background_color": "#eef4f6",
+  "theme_color": "#101820",
+  "description": "Capture, Crop, Carving. A sharp alpine archive for photos, context, and reflection.",
   "icons": [
     {
       "src": "./icon.svg",
