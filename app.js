@@ -198,6 +198,7 @@ let supabaseClient = null;
 let cloudSession = null;
 let cloudBusy = false;
 let cloudAuthNotice = null;
+let aiServerStatus = null;
 
 const elements = {};
 
@@ -209,6 +210,7 @@ async function init() {
   renderCategoryFields();
   seedAiPrompt();
   loadSavedApiSettings();
+  refreshAiServerStatus();
   initCloud();
 
   try {
@@ -251,8 +253,11 @@ function cacheElements() {
   elements.categoryFields = document.querySelector("#categoryFields");
   elements.aiPromptInput = document.querySelector("#aiPromptInput");
   elements.apiProviderInput = document.querySelector("#apiProviderInput");
+  elements.apiKeyField = document.querySelector("#apiKeyField");
   elements.apiKeyLabel = document.querySelector("#apiKeyLabel");
   elements.apiKeyInput = document.querySelector("#apiKeyInput");
+  elements.serverKeyNote = document.querySelector("#serverKeyNote");
+  elements.apiKeyRow = document.querySelector("#apiKeyRow");
   elements.apiModelInput = document.querySelector("#apiModelInput");
   elements.rememberApiKeyInput = document.querySelector("#rememberApiKeyInput");
   elements.clearSavedApiKeyButton = document.querySelector("#clearSavedApiKeyButton");
@@ -648,9 +653,17 @@ async function handlePhotoSelection(event) {
 function setPhotoPreview(blob) {
   if (previewUrl) URL.revokeObjectURL(previewUrl);
   previewUrl = URL.createObjectURL(blob);
+  elements.photoPreview.hidden = true;
+  elements.photoPreview.removeAttribute("src");
+  elements.photoPreview.onload = () => {
+    elements.photoPreview.hidden = false;
+    elements.photoPlaceholder.hidden = true;
+  };
+  elements.photoPreview.onerror = () => {
+    clearPhotoPreview();
+    showToast("이 사진은 브라우저 미리보기를 만들지 못했습니다. 저장은 계속할 수 있습니다.");
+  };
   elements.photoPreview.src = previewUrl;
-  elements.photoPreview.hidden = false;
-  elements.photoPlaceholder.hidden = true;
 }
 
 function clearPhotoPreview() {
@@ -661,6 +674,8 @@ function clearPhotoPreview() {
 
   elements.cameraInput.value = "";
   elements.libraryInput.value = "";
+  elements.photoPreview.onload = null;
+  elements.photoPreview.onerror = null;
   elements.photoPreview.removeAttribute("src");
   elements.photoPreview.hidden = true;
   elements.photoPlaceholder.hidden = false;
@@ -1121,6 +1136,19 @@ function handleApiKeyInput() {
   }
 }
 
+async function refreshAiServerStatus() {
+  if (window.location.protocol === "file:") return;
+
+  try {
+    const response = await fetch("/api/health", { cache: "no-store" });
+    if (!response.ok) return;
+    aiServerStatus = await response.json();
+    updateApiProviderUi(getSelectedAiProvider());
+  } catch (error) {
+    console.warn("AI server status check failed", error);
+  }
+}
+
 function clearSavedApiKey() {
   const provider = getSelectedAiProvider();
   localStorage.removeItem(getApiKeyStorageKey(provider));
@@ -1167,8 +1195,16 @@ function getSavedApiModel(provider) {
 
 function updateApiProviderUi(provider) {
   const providerConfig = getAiProviderConfig(provider);
+  const providerStatus = aiServerStatus?.providers?.[normalizeAiProvider(provider)] || {};
+  const hasServerKey = Boolean(providerStatus.hasServerApiKey);
   elements.apiKeyLabel.textContent = providerConfig.keyLabel;
   elements.apiKeyInput.placeholder = `${providerConfig.keyPrefix}... 또는 서버 환경변수 사용`;
+  elements.apiKeyField.hidden = hasServerKey;
+  elements.apiKeyRow.hidden = hasServerKey;
+  elements.serverKeyNote.hidden = !hasServerKey;
+  elements.serverKeyNote.textContent = hasServerKey
+    ? `${providerConfig.serverKeyLabel}가 서버에 저장되어 있어 API 키를 매번 입력하지 않아도 됩니다.`
+    : "";
 }
 
 function isValidApiKeyForProvider(apiKey, provider) {

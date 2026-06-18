@@ -3122,3 +3122,113 @@ body[data-theme="cube"] .cloud-settings {
   border-color: rgba(29, 103, 189, 0.14);
   background: rgba(255, 253, 248, 0.72);
 }
+
+/* Mobile fit and AI key state */
+.server-key-note {
+  margin: 0;
+  padding: 10px 12px;
+  border: 1px solid rgba(29, 103, 189, 0.24);
+  background: #e8f3ff;
+  color: #16426e;
+  font-size: 0.92rem;
+  font-weight: 760;
+  line-height: 1.45;
+}
+
+.photo-preview {
+  background: #fffdf8;
+}
+
+@media (max-width: 640px) {
+  html,
+  body {
+    width: 100%;
+    max-width: 100%;
+    overflow-x: hidden;
+  }
+
+  body[data-theme="cube"] .app-shell {
+    width: min(100% - 12px, 100%);
+    max-width: 100%;
+  }
+
+  body[data-theme="cube"] .overview-band,
+  body[data-theme="cube"] .cloud-panel,
+  body[data-theme="cube"] .capture-panel,
+  body[data-theme="cube"] .album-section,
+  body[data-theme="cube"] .editor-pane,
+  body[data-theme="cube"] #albumView {
+    width: 100%;
+    max-width: 100%;
+    padding: 16px;
+    overflow: hidden;
+  }
+
+  body[data-theme="cube"] .capture-panel,
+  body[data-theme="cube"] .cloud-grid,
+  body[data-theme="cube"] .field-grid,
+  body[data-theme="cube"] .category-fields,
+  body[data-theme="cube"] .photo-actions,
+  body[data-theme="cube"] .ai-actions,
+  body[data-theme="cube"] .form-actions {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 10px;
+  }
+
+  body[data-theme="cube"] .capture-panel *,
+  body[data-theme="cube"] .editor-pane *,
+  body[data-theme="cube"] .album-section *,
+  body[data-theme="cube"] .cloud-panel * {
+    min-width: 0;
+    writing-mode: horizontal-tb;
+    word-break: keep-all;
+    overflow-wrap: break-word;
+  }
+
+  body[data-theme="cube"] .panel-copy,
+  body[data-theme="cube"] textarea,
+  body[data-theme="cube"] .ai-result,
+  body[data-theme="cube"] .metadata-panel {
+    word-break: keep-all;
+    overflow-wrap: anywhere;
+  }
+
+  body[data-theme="cube"] .large,
+  body[data-theme="cube"] button,
+  body[data-theme="cube"] input,
+  body[data-theme="cube"] select,
+  body[data-theme="cube"] textarea {
+    width: 100%;
+    max-width: 100%;
+  }
+
+  body[data-theme="cube"] .photo-dropzone {
+    min-height: 190px;
+    aspect-ratio: 4 / 3;
+  }
+
+  body[data-theme="cube"] .photo-preview {
+    display: block;
+    width: 100%;
+    height: 100%;
+    min-height: 160px;
+    background: #fffdf8;
+  }
+
+  body[data-theme="cube"] .capture-actions,
+  body[data-theme="cube"] .photo-actions,
+  body[data-theme="cube"] .ai-actions {
+    border: 0;
+    background: transparent;
+  }
+
+  body[data-theme="cube"] .category-group {
+    overflow-x: auto;
+  }
+
+  body[data-theme="cube"] .segmented-control {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}

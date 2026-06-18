@@ -179,7 +179,7 @@
                       <option value="openai">OpenAI API</option>
                     </select>
                   </label>
-                  <label class="field">
+                  <label class="field" id="apiKeyField">
                     <span id="apiKeyLabel">Claude API 키</span>
                     <input id="apiKeyInput" type="password" autocomplete="off" placeholder="서버 환경변수 대신 임시 입력 가능" />
                   </label>
@@ -188,7 +188,8 @@
                     <input id="apiModelInput" type="text" autocomplete="off" value="claude-sonnet-4-6" />
                   </label>
                 </div>
-                <div class="api-key-row">
+                <p class="server-key-note" id="serverKeyNote" hidden></p>
+                <div class="api-key-row" id="apiKeyRow">
                   <label class="check-field">
                     <input id="rememberApiKeyInput" type="checkbox" />
                     <span>이 기기에 API 키 저장</span>
