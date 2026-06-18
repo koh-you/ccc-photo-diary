@@ -1,10 +1,10 @@
 module.exports = function handler(request, response) {
   if (request.method !== "GET") {
-    response.status(405).json({ error: "Method not allowed" });
+    sendJson(response, 405, { error: "Method not allowed" });
     return;
   }
 
-  response.status(200).json({
+  sendJson(response, 200, {
     ok: true,
     app: "CCC",
     runtime: "vercel",
@@ -12,7 +12,15 @@ module.exports = function handler(request, response) {
     hasServerApiKey: Boolean(process.env.OPENAI_API_KEY),
     hasSupabase: Boolean(
       (process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL) &&
-        (process.env.SUPABASE_ANON_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY)
+      (process.env.SUPABASE_ANON_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY)
     )
   });
 };
+
+function sendJson(response, statusCode, payload) {
+  response.writeHead(statusCode, {
+    "Content-Type": "application/json; charset=utf-8",
+    "Cache-Control": "no-store"
+  });
+  response.end(JSON.stringify(payload));
+}

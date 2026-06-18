@@ -32,7 +32,7 @@ const detailKeys = [
 
 module.exports = async function handler(request, response) {
   if (request.method !== "POST") {
-    response.status(405).json({ error: "Method not allowed" });
+    sendJson(response, 405, { error: "Method not allowed" });
     return;
   }
 
@@ -42,14 +42,14 @@ module.exports = async function handler(request, response) {
     const model = body.model || process.env.OPENAI_MODEL || "gpt-5.5";
 
     if (!apiKey) {
-      response.status(400).json({
+      sendJson(response, 400, {
         error: "OPENAI_API_KEY is not set on the server. Set it in Vercel Environment Variables."
       });
       return;
     }
 
     if (!apiKey.startsWith("sk-")) {
-      response.status(400).json({
+      sendJson(response, 400, {
         error: "OpenAI API key must be the full key that starts with sk-."
       });
       return;
@@ -93,7 +93,7 @@ module.exports = async function handler(request, response) {
 
     const payload = await apiResponse.json();
     if (!apiResponse.ok) {
-      response.status(apiResponse.status).json({
+      sendJson(response, apiResponse.status, {
         error: payload.error?.message || "OpenAI API request failed.",
         details: payload.error || payload
       });
@@ -105,22 +105,30 @@ module.exports = async function handler(request, response) {
     try {
       result = JSON.parse(text);
     } catch (error) {
-      response.status(502).json({
+      sendJson(response, 502, {
         error: "AI response was not valid JSON.",
         raw: text
       });
       return;
     }
 
-    response.status(200).json({
+    sendJson(response, 200, {
       model: payload.model || model,
       result
     });
   } catch (error) {
     console.error(error);
-    response.status(500).json({ error: error.message || "Server error" });
+    sendJson(response, 500, { error: error.message || "Server error" });
   }
 };
+
+function sendJson(response, statusCode, payload) {
+  response.writeHead(statusCode, {
+    "Content-Type": "application/json; charset=utf-8",
+    "Cache-Control": "no-store"
+  });
+  response.end(JSON.stringify(payload));
+}
 
 function readBody(request) {
   if (!request.body) return {};
