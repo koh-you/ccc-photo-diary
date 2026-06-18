@@ -1148,11 +1148,52 @@ h3 {
   }
 
   .photo-actions,
-  .cloud-actions,
   .ai-actions,
   .form-actions {
     display: grid;
     grid-template-columns: 1fr;
+  }
+
+  .cloud-actions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+  }
+
+  .cloud-actions > * {
+    width: 100%;
+    min-height: 46px;
+    padding-inline: 10px;
+  }
+
+  #cloudLoginButton {
+    grid-column: 1 / -1;
+    order: 1;
+  }
+
+  #cloudPushButton {
+    order: 2;
+  }
+
+  #cloudPullButton {
+    order: 3;
+  }
+
+  #cloudRefreshButton {
+    order: 4;
+  }
+
+  #cloudSignOutButton {
+    order: 5;
+  }
+
+  .cloud-signed-in .cloud-email-field,
+  .cloud-signed-in #cloudLoginButton {
+    display: none;
+  }
+
+  .cloud-signed-in .cloud-actions {
+    margin-top: -2px;
   }
 
   .entry-card {
@@ -1221,6 +1262,21 @@ h3 {
     align-self: flex-start;
   }
 
+  .cloud-panel {
+    gap: 10px;
+  }
+
+  .cloud-grid {
+    gap: 10px;
+  }
+
+  .cloud-note {
+    padding: 9px 10px;
+    border: 1px solid rgba(0, 121, 214, 0.34);
+    border-radius: 12px;
+    background: rgba(189, 244, 255, 0.46);
+  }
+
   .stats-strip {
     gap: 7px;
   }
@@ -1273,5 +1329,9 @@ h3 {
 
   .top-actions {
     grid-template-columns: 1fr;
+  }
+
+  .cloud-actions {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }

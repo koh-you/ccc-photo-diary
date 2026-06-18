@@ -256,6 +256,8 @@ function cacheElements() {
   elements.trashCount = document.querySelector("#trashCount");
   elements.cloudStatusBadge = document.querySelector("#cloudStatusBadge");
   elements.cloudEmailInput = document.querySelector("#cloudEmailInput");
+  elements.cloudEmailField = elements.cloudEmailInput?.closest(".field");
+  elements.cloudEmailField?.classList.add("cloud-email-field");
   elements.cloudLoginButton = document.querySelector("#cloudLoginButton");
   elements.cloudRefreshButton = document.querySelector("#cloudRefreshButton");
   elements.cloudPushButton = document.querySelector("#cloudPushButton");
@@ -1066,14 +1068,14 @@ async function initCloud() {
   const savedEmail = localStorage.getItem(CLOUD_EMAIL_STORAGE_KEY) || "";
   if (elements.cloudEmailInput) elements.cloudEmailInput.value = savedEmail;
   cloudAuthNotice = readCloudAuthRedirectNotice();
-  updateCloudUi("Local", "Supabase settings are not loaded yet.");
+  updateCloudUi("Local", "클라우드 설정을 불러오는 중입니다.");
   if (cloudAuthNotice) {
     updateCloudUi("Auth", cloudAuthNotice.note);
     showToast(cloudAuthNotice.toast);
   }
 
   if (window.location.protocol === "file:") {
-    updateCloudUi("Local", "Cloud sync needs an http or https address.");
+    updateCloudUi("Local", "클라우드 동기화는 HTTPS 주소에서 사용할 수 있습니다.");
     return;
   }
 
@@ -1083,12 +1085,12 @@ async function initCloud() {
 
     cloudConfig = await response.json();
     if (!cloudConfig.hasSupabase || !cloudConfig.supabaseUrl || !cloudConfig.supabaseAnonKey) {
-      updateCloudUi("Local", "Set SUPABASE_URL and SUPABASE_ANON_KEY on Vercel to enable cloud sync.");
+      updateCloudUi("Local", "Vercel에 Supabase 환경변수를 설정하면 클라우드 동기화가 켜집니다.");
       return;
     }
 
     if (!window.supabase?.createClient) {
-      updateCloudUi("Local", "Supabase browser SDK did not load. Check the network connection.");
+      updateCloudUi("Local", "Supabase SDK를 불러오지 못했습니다. 네트워크를 확인해주세요.");
       return;
     }
 
@@ -1122,14 +1124,18 @@ function updateCloudUi(statusOverride = null, noteOverride = null) {
   const configured = Boolean(supabaseClient);
   const signedIn = Boolean(cloudSession?.user);
   const status = statusOverride || (signedIn ? "Cloud" : configured ? "Ready" : "Local");
+  document.body.classList.toggle("cloud-configured", configured);
+  document.body.classList.toggle("cloud-signed-in", signedIn);
+  document.body.classList.toggle("cloud-busy", cloudBusy);
+
   const note =
     noteOverride ||
     (!signedIn && cloudAuthNotice?.note) ||
     (signedIn
-      ? `Signed in as ${cloudSession.user.email || cloudSession.user.id}.`
+      ? `${cloudSession.user.email || cloudSession.user.id} 계정으로 로그인되어 있습니다.`
       : configured
-        ? "Cloud is configured. Send a login link to your email first."
-        : "Cloud sync is not configured yet.");
+        ? "이메일로 로그인 링크를 받은 뒤 업로드와 가져오기를 사용할 수 있습니다."
+        : "클라우드 동기화가 아직 설정되지 않았습니다.");
 
   elements.cloudStatusBadge.textContent = status;
   elements.cloudStatusBadge.classList.toggle("is-online", signedIn);
@@ -1144,13 +1150,13 @@ function updateCloudUi(statusOverride = null, noteOverride = null) {
 
 async function handleCloudLogin() {
   try {
-    if (!supabaseClient) throw new Error("Cloud sync is not configured yet.");
+    if (!supabaseClient) throw new Error("클라우드 동기화가 아직 설정되지 않았습니다.");
     const email = elements.cloudEmailInput.value.trim();
-    if (!email) throw new Error("Enter an email address first.");
+    if (!email) throw new Error("먼저 이메일 주소를 입력해주세요.");
 
     localStorage.setItem(CLOUD_EMAIL_STORAGE_KEY, email);
     cloudBusy = true;
-    updateCloudUi(null, "Sending a Supabase login link...");
+    updateCloudUi(null, "로그인 링크를 보내는 중입니다.");
 
     const redirectTo = getCloudRedirectUrl();
     const { error } = await supabaseClient.auth.signInWithOtp({
@@ -1163,7 +1169,7 @@ async function handleCloudLogin() {
     if (error) throw error;
 
     cloudAuthNotice = null;
-    updateCloudUi(null, `Login link sent. It should return to ${redirectTo}`);
+    updateCloudUi(null, "로그인 링크를 보냈습니다. 아이폰에서 메일 링크를 열어 돌아오세요.");
     showToast("로그인 링크를 이메일로 보냈습니다.");
   } catch (error) {
     console.error(error);
@@ -1177,11 +1183,11 @@ async function handleCloudLogin() {
 
 async function refreshCloudSession() {
   try {
-    if (!supabaseClient) throw new Error("Cloud sync is not configured yet.");
+    if (!supabaseClient) throw new Error("클라우드 동기화가 아직 설정되지 않았습니다.");
     const { data, error } = await supabaseClient.auth.getSession();
     if (error) throw error;
     cloudSession = data.session || null;
-    updateCloudUi(null, cloudSession ? "Cloud session is active." : "No cloud session yet.");
+    updateCloudUi(null, cloudSession ? "클라우드 세션이 활성화되어 있습니다." : "아직 로그인 세션이 없습니다.");
   } catch (error) {
     console.error(error);
     updateCloudUi(null, normalizeCloudError(error));
@@ -1194,7 +1200,7 @@ async function handleCloudSignOut() {
     const { error } = await supabaseClient.auth.signOut();
     if (error) throw error;
     cloudSession = null;
-    updateCloudUi(null, "Signed out from cloud.");
+    updateCloudUi(null, "클라우드에서 로그아웃했습니다.");
     showToast("클라우드에서 로그아웃했습니다.");
   } catch (error) {
     console.error(error);
@@ -1211,16 +1217,16 @@ async function handleCloudPush() {
     }
 
     cloudBusy = true;
-    updateCloudUi(null, "Uploading local entries to Supabase...");
+    updateCloudUi(null, "로컬 기록을 클라우드에 업로드하는 중입니다.");
 
     let uploaded = 0;
     for (const entry of entries) {
       uploaded += 1;
-      updateCloudUi(null, `Uploading ${uploaded}/${entries.length}...`);
+      updateCloudUi(null, `업로드 중 ${uploaded}/${entries.length}`);
       await uploadEntryToCloud(entry, session.user.id);
     }
 
-    updateCloudUi(null, `Uploaded ${uploaded} entries to Supabase.`);
+    updateCloudUi(null, `${uploaded}개 기록을 클라우드에 업로드했습니다.`);
     showToast("클라우드 업로드를 마쳤습니다.");
   } catch (error) {
     console.error(error);
@@ -1235,13 +1241,13 @@ async function handleCloudPush() {
 async function handleCloudPull() {
   try {
     requireCloudSession();
-    if (!db) throw new Error("Local database is not ready.");
+    if (!db) throw new Error("로컬 데이터베이스가 아직 준비되지 않았습니다.");
 
     const confirmed = window.confirm("클라우드 기록을 이 기기로 가져옵니다. 같은 ID의 로컬 기록은 덮어씁니다.");
     if (!confirmed) return;
 
     cloudBusy = true;
-    updateCloudUi(null, "Downloading entries from Supabase...");
+    updateCloudUi(null, "클라우드 기록을 가져오는 중입니다.");
 
     const { data, error } = await supabaseClient
       .from(CLOUD_ENTRY_TABLE)
@@ -1253,13 +1259,13 @@ async function handleCloudPull() {
     let downloaded = 0;
     for (const row of rows) {
       downloaded += 1;
-      updateCloudUi(null, `Downloading ${downloaded}/${rows.length}...`);
+      updateCloudUi(null, `가져오는 중 ${downloaded}/${rows.length}`);
       const entry = await inflateCloudEntry(row.payload);
       await putEntry(entry);
     }
 
     await loadEntries();
-    updateCloudUi(null, `Downloaded ${downloaded} entries from Supabase.`);
+    updateCloudUi(null, `${downloaded}개 기록을 클라우드에서 가져왔습니다.`);
     showToast("클라우드 기록을 가져왔습니다.");
   } catch (error) {
     console.error(error);
@@ -1272,8 +1278,8 @@ async function handleCloudPull() {
 }
 
 function requireCloudSession() {
-  if (!supabaseClient) throw new Error("Cloud sync is not configured yet.");
-  if (!cloudSession?.user) throw new Error("Sign in to cloud first.");
+  if (!supabaseClient) throw new Error("클라우드 동기화가 아직 설정되지 않았습니다.");
+  if (!cloudSession?.user) throw new Error("먼저 클라우드에 로그인해주세요.");
   return cloudSession;
 }
 
@@ -1422,7 +1428,7 @@ function sanitizePathSegment(value) {
 }
 
 function normalizeCloudError(error) {
-  return error?.message || String(error || "Cloud sync failed.");
+  return error?.message || String(error || "클라우드 동기화에 실패했습니다.");
 }
 
 function seedAiPrompt() {
