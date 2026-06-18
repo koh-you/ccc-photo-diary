@@ -6,10 +6,12 @@ const API_KEY_STORAGE_KEY = "ccc-openai-api-key";
 const API_MODEL_STORAGE_KEY = "ccc-openai-model";
 const CLOUD_EMAIL_STORAGE_KEY = "ccc-cloud-email";
 const THEME_STORAGE_KEY = "ccc-design-theme";
+const THEME_VERSION_STORAGE_KEY = "ccc-design-theme-version";
 const CLOUD_CONFIG_URL = "/api/config";
 const CLOUD_ENTRY_TABLE = "ccc_entries";
 const CLOUD_PHOTO_BUCKET = "ccc-photos";
 const DESIGN_THEMES = ["cube", "alpine", "drawer"];
+const DESIGN_THEME_VERSION = "white-cube-v2";
 
 const categories = {
   food: {
@@ -341,6 +343,13 @@ function bindEvents() {
 }
 
 function applySavedTheme() {
+  if (localStorage.getItem(THEME_VERSION_STORAGE_KEY) !== DESIGN_THEME_VERSION) {
+    localStorage.setItem(THEME_STORAGE_KEY, "cube");
+    localStorage.setItem(THEME_VERSION_STORAGE_KEY, DESIGN_THEME_VERSION);
+    applyTheme("cube");
+    return;
+  }
+
   const savedTheme = localStorage.getItem(THEME_STORAGE_KEY);
   applyTheme(DESIGN_THEMES.includes(savedTheme) ? savedTheme : "cube");
 }
@@ -349,6 +358,7 @@ function handleThemeOptionClick(event) {
   const theme = event.currentTarget.dataset.themeOption;
   applyTheme(theme);
   localStorage.setItem(THEME_STORAGE_KEY, theme);
+  localStorage.setItem(THEME_VERSION_STORAGE_KEY, DESIGN_THEME_VERSION);
   showToast(`${event.currentTarget.textContent} 시안으로 전환했습니다.`);
 }
 

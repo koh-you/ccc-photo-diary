@@ -3195,3 +3195,408 @@ body[data-theme="alpine"] .ai-result {
   background: #ffffff;
   color: #050505;
 }
+
+/* White Cube development */
+body[data-theme="cube"] {
+  --bg: #f4f9ff;
+  --surface: #ffffff;
+  --surface-strong: #eef7ff;
+  --ink: #06265a;
+  --muted: #597899;
+  --line: #006ce5;
+  --moss: #2a8de8;
+  --moss-dark: #06447c;
+  --plum: #235d9e;
+  --coral: #006ce5;
+  --sun: #c7e3ff;
+  --sea: #005bd1;
+  --lagoon: #e5f4ff;
+  --shadow: 0 18px 42px rgba(0, 86, 190, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.96);
+  background:
+    linear-gradient(90deg, rgba(0, 108, 229, 0.05) 1px, transparent 1px),
+    linear-gradient(180deg, rgba(0, 108, 229, 0.04) 1px, transparent 1px),
+    linear-gradient(180deg, #f4f9ff 0%, #ffffff 52%, #eff8ff 100%);
+  background-size: 40px 40px, 40px 40px, auto;
+}
+
+body[data-theme="cube"] .app-shell {
+  width: min(1120px, calc(100% - 34px));
+}
+
+body[data-theme="cube"] .topbar {
+  position: relative;
+  align-items: end;
+  gap: 18px;
+  margin-bottom: 12px;
+  padding-bottom: 18px;
+  border-bottom: 1px solid rgba(0, 87, 190, 0.34);
+}
+
+body[data-theme="cube"] .topbar::after {
+  content: "";
+  position: absolute;
+  bottom: -1px;
+  left: 0;
+  width: 112px;
+  height: 2px;
+  background: #006ce5;
+}
+
+body[data-theme="cube"] .brand-logo {
+  gap: 4px;
+}
+
+body[data-theme="cube"] .brand-logo span {
+  width: 42px;
+  height: 58px;
+  border: 1px solid #006ce5;
+  border-radius: 0;
+  background:
+    linear-gradient(135deg, #ffffff 0 42%, rgba(0, 108, 229, 0.14) 42.2% 45%, transparent 45.2%),
+    linear-gradient(180deg, #ffffff 0%, #eef7ff 100%);
+  box-shadow: 7px 7px 0 rgba(0, 108, 229, 0.11);
+  color: #005bd1;
+}
+
+body[data-theme="cube"] .top-actions {
+  align-items: end;
+}
+
+body[data-theme="cube"] .top-actions .secondary-action,
+body[data-theme="cube"] .back-button {
+  min-height: 36px;
+  border-color: rgba(0, 91, 209, 0.38);
+  background: rgba(255, 255, 255, 0.78);
+  color: #0050b8;
+  font-size: 0.86rem;
+}
+
+body[data-theme="cube"] .design-switcher {
+  display: grid;
+  grid-template-columns: auto repeat(3, minmax(0, 1fr));
+  gap: 1px;
+  margin: 0 0 20px;
+  border: 1px solid rgba(0, 91, 209, 0.28);
+  background: rgba(0, 91, 209, 0.28);
+}
+
+body[data-theme="cube"] .design-switcher span,
+body[data-theme="cube"] .theme-option {
+  min-height: 38px;
+  border: 0;
+  border-radius: 0;
+  background: rgba(255, 255, 255, 0.92);
+}
+
+body[data-theme="cube"] .design-switcher span {
+  display: inline-grid;
+  place-items: center;
+  min-width: 82px;
+  padding: 0 12px;
+  color: #0060c9;
+  font-size: 0.68rem;
+}
+
+body[data-theme="cube"] .theme-option {
+  color: #315f91;
+}
+
+body[data-theme="cube"] .theme-option.is-active {
+  background: #006ce5;
+  color: #ffffff;
+}
+
+body[data-theme="cube"] .overview-band,
+body[data-theme="cube"] .cloud-panel,
+body[data-theme="cube"] .capture-panel,
+body[data-theme="cube"] .album-section,
+body[data-theme="cube"] .editor-pane,
+body[data-theme="cube"] .album-view-card,
+body[data-theme="cube"] .metadata-panel,
+body[data-theme="cube"] .ai-panel,
+body[data-theme="cube"] .category-details {
+  border: 1px solid rgba(0, 91, 209, 0.28);
+  border-radius: 0;
+  background: rgba(255, 255, 255, 0.96);
+  box-shadow: var(--shadow);
+}
+
+body[data-theme="cube"] .overview-band,
+body[data-theme="cube"] .capture-panel,
+body[data-theme="cube"] .album-section,
+body[data-theme="cube"] .editor-pane {
+  padding: 24px;
+}
+
+body[data-theme="cube"] .overview-band::before,
+body[data-theme="cube"] .cloud-panel::before,
+body[data-theme="cube"] .capture-panel::before,
+body[data-theme="cube"] .album-section::before,
+body[data-theme="cube"] .editor-pane::before,
+body[data-theme="cube"] .album-view-card::before {
+  height: 2px;
+  background: linear-gradient(90deg, #006ce5 0 88px, rgba(0, 108, 229, 0.18) 88px, transparent 100%);
+}
+
+body[data-theme="cube"] .overview-title {
+  margin-bottom: 18px;
+}
+
+body[data-theme="cube"] .eyebrow {
+  color: #0060c9;
+  font-size: 0.66rem;
+  font-weight: 900;
+}
+
+body[data-theme="cube"] h2 {
+  color: #06265a;
+  font-size: 1.34rem;
+}
+
+body[data-theme="cube"] .stats-strip {
+  gap: 1px;
+  border: 1px solid rgba(0, 91, 209, 0.22);
+  background: rgba(0, 91, 209, 0.22);
+}
+
+body[data-theme="cube"] .stats-strip div,
+body[data-theme="cube"] .stats-strip div:nth-child(2),
+body[data-theme="cube"] .stats-strip div:nth-child(3),
+body[data-theme="cube"] .stats-strip div:nth-child(4) {
+  min-height: 88px;
+  border: 0;
+  border-radius: 0;
+  background: #ffffff;
+  box-shadow: inset 0 -4px 0 #006ce5;
+}
+
+body[data-theme="cube"] .stats-strip span {
+  color: #005bd1;
+  font-size: 1.76rem;
+  font-weight: 840;
+}
+
+body[data-theme="cube"] .stats-strip small {
+  color: #597899;
+  font-size: 0.82rem;
+  font-weight: 820;
+}
+
+body[data-theme="cube"] .capture-panel {
+  grid-template-columns: minmax(0, 1fr) minmax(280px, 420px);
+  background:
+    linear-gradient(132deg, rgba(255, 255, 255, 0.98) 0 66%, rgba(229, 244, 255, 0.88) 66.2%),
+    #ffffff;
+}
+
+body[data-theme="cube"] .panel-copy {
+  max-width: 38rem;
+  color: #4c6f97;
+  font-weight: 680;
+}
+
+body[data-theme="cube"] .capture-actions {
+  gap: 1px;
+  border: 1px solid rgba(0, 91, 209, 0.32);
+  background: rgba(0, 91, 209, 0.32);
+}
+
+body[data-theme="cube"] .primary-action.large,
+body[data-theme="cube"] .secondary-action.large {
+  min-height: 58px;
+}
+
+body[data-theme="cube"] .primary-action,
+body[data-theme="cube"] .secondary-action,
+body[data-theme="cube"] .danger-action,
+body[data-theme="cube"] .ghost-button,
+body[data-theme="cube"] .icon-button,
+body[data-theme="cube"] .back-button,
+body[data-theme="cube"] .segment,
+body[data-theme="cube"] .filter-pill {
+  border-radius: 0;
+}
+
+body[data-theme="cube"] .primary-action {
+  border: 1px solid #0050b8;
+  background: linear-gradient(180deg, #0877f2, #0050b8);
+  box-shadow: none;
+}
+
+body[data-theme="cube"] .secondary-action {
+  border: 1px solid rgba(0, 91, 209, 0.44);
+  background: #ffffff;
+  color: #005bd1;
+}
+
+body[data-theme="cube"] .album-section {
+  margin-top: 0;
+}
+
+body[data-theme="cube"] .album-grid {
+  gap: 14px;
+}
+
+body[data-theme="cube"] .album-card {
+  min-height: 206px;
+  padding: 12px;
+  border: 1px solid rgba(0, 91, 209, 0.3);
+  border-radius: 0;
+  background: #ffffff;
+  box-shadow: 0 16px 30px rgba(0, 86, 190, 0.075);
+}
+
+body[data-theme="cube"] .album-card:hover {
+  border-color: #006ce5;
+  box-shadow: 0 20px 38px rgba(0, 86, 190, 0.12);
+  transform: translateY(-2px);
+}
+
+body[data-theme="cube"] .album-cover {
+  height: 132px;
+  border: 1px solid rgba(0, 91, 209, 0.22);
+  border-radius: 0;
+  background:
+    linear-gradient(135deg, transparent 0 47%, rgba(0, 108, 229, 0.18) 47.2% 49.2%, transparent 49.4%),
+    linear-gradient(90deg, rgba(0, 108, 229, 0.055) 1px, transparent 1px),
+    linear-gradient(180deg, rgba(0, 108, 229, 0.045) 1px, transparent 1px),
+    #f6fbff;
+  background-size: auto, 22px 22px, 22px 22px, auto;
+}
+
+body[data-theme="cube"] .album-empty-icon {
+  width: 70px;
+  height: 70px;
+  border: 1px solid #006ce5;
+  border-radius: 0;
+  background:
+    linear-gradient(135deg, #ffffff 0 48%, #dff1ff 48.2% 100%);
+  box-shadow: 7px 7px 0 rgba(0, 108, 229, 0.1);
+}
+
+body[data-theme="cube"] .category-icon {
+  color: #005bd1;
+  stroke-width: 3.2;
+}
+
+body[data-theme="cube"] .album-card.wine .category-icon,
+body[data-theme="cube"] .album-card.culture .category-icon,
+body[data-theme="cube"] .album-card.math .category-icon {
+  color: #005bd1;
+}
+
+body[data-theme="cube"] .album-body h3 {
+  color: #06265a;
+  font-size: 1.04rem;
+}
+
+body[data-theme="cube"] .album-body p {
+  color: #5c7794;
+}
+
+body[data-theme="cube"] .photo-dropzone {
+  min-height: 270px;
+  border: 1px solid rgba(0, 91, 209, 0.4);
+  border-radius: 0;
+  background:
+    linear-gradient(135deg, transparent 0 49%, rgba(0, 108, 229, 0.16) 49.2% 50%, transparent 50.2%),
+    linear-gradient(90deg, rgba(0, 108, 229, 0.055) 1px, transparent 1px),
+    linear-gradient(180deg, rgba(0, 108, 229, 0.045) 1px, transparent 1px),
+    #f8fcff;
+  background-size: auto, 28px 28px, 28px 28px, auto;
+}
+
+body[data-theme="cube"] .photo-strip-item > button:first-child,
+body[data-theme="cube"] .entry-thumb,
+body[data-theme="cube"] .thumb-fallback,
+body[data-theme="cube"] .detail-gallery img,
+body[data-theme="cube"] .detail-photo {
+  border-radius: 0;
+}
+
+body[data-theme="cube"] .field input,
+body[data-theme="cube"] .field textarea,
+body[data-theme="cube"] .field select,
+body[data-theme="cube"] .search-field,
+body[data-theme="cube"] .search-field input {
+  border-radius: 0;
+  border-color: rgba(0, 91, 209, 0.36);
+  background: #ffffff;
+}
+
+body[data-theme="cube"] .field input:focus,
+body[data-theme="cube"] .field textarea:focus,
+body[data-theme="cube"] .field select:focus,
+body[data-theme="cube"] .search-field input:focus {
+  border-color: #006ce5;
+  box-shadow: 0 0 0 3px rgba(0, 108, 229, 0.14);
+}
+
+body[data-theme="cube"] .entry-card {
+  border-color: rgba(0, 91, 209, 0.28);
+  border-radius: 0;
+  background: #ffffff;
+  box-shadow: 0 12px 26px rgba(0, 86, 190, 0.065);
+}
+
+body[data-theme="cube"] .entry-card:hover {
+  border-color: #006ce5;
+}
+
+body[data-theme="cube"] .category-badge,
+body[data-theme="cube"] .date-badge,
+body[data-theme="cube"] .tag-chip,
+body[data-theme="cube"] .status-badge {
+  border-radius: 0;
+}
+
+body[data-theme="cube"] .cloud-settings {
+  border-color: rgba(0, 91, 209, 0.18);
+  background: rgba(255, 255, 255, 0.78);
+}
+
+body[data-theme="cube"] .cloud-summary::after {
+  border-radius: 0;
+  border-color: rgba(0, 91, 209, 0.28);
+  color: #005bd1;
+  background: #ffffff;
+}
+
+@media (max-width: 780px) {
+  body[data-theme="cube"] .design-switcher {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  body[data-theme="cube"] .design-switcher span {
+    display: none;
+  }
+}
+
+@media (max-width: 560px) {
+  body[data-theme="cube"] .app-shell {
+    width: calc(100% - 16px);
+  }
+
+  body[data-theme="cube"] .overview-band,
+  body[data-theme="cube"] .capture-panel,
+  body[data-theme="cube"] .album-section,
+  body[data-theme="cube"] .editor-pane,
+  body[data-theme="cube"] #albumView {
+    padding: 16px;
+  }
+
+  body[data-theme="cube"] .brand-logo span {
+    width: 36px;
+    height: 48px;
+  }
+
+  body[data-theme="cube"] .stats-strip {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  body[data-theme="cube"] .theme-option {
+    min-height: 40px;
+    padding: 0 8px;
+    font-size: 0.74rem;
+  }
+}
