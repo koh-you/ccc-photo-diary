@@ -57,29 +57,32 @@
             </div>
           </section>
 
-          <section class="cloud-panel" aria-labelledby="cloudPanelTitle">
-            <div class="section-heading compact">
+          <details class="cloud-panel cloud-settings" id="cloudPanel">
+            <summary class="cloud-summary">
               <div>
                 <p class="eyebrow">Cloud</p>
-                <h2 id="cloudPanelTitle">클라우드 동기화</h2>
+                <h2 id="cloudPanelTitle">클라우드</h2>
+                <p class="cloud-summary-copy" id="cloudSummaryCopy">자동 저장은 로그인 후 작동합니다. 로그인과 복구가 필요할 때 펼치세요.</p>
               </div>
               <span class="status-badge" id="cloudStatusBadge">Local</span>
-            </div>
-            <div class="cloud-grid">
-              <label class="field">
-                <span>로그인 이메일</span>
-                <input id="cloudEmailInput" type="email" autocomplete="email" placeholder="you@example.com" />
-              </label>
-              <div class="cloud-actions">
-                <button class="secondary-action" id="cloudLoginButton" type="button">로그인 링크 받기</button>
-                <button class="secondary-action" id="cloudRefreshButton" type="button">상태 확인</button>
-                <button class="primary-action" id="cloudPushButton" type="button">클라우드 업로드</button>
-                <button class="secondary-action" id="cloudPullButton" type="button">클라우드 가져오기</button>
-                <button class="ghost-button" id="cloudSignOutButton" type="button">로그아웃</button>
+            </summary>
+            <div class="cloud-controls" aria-labelledby="cloudPanelTitle">
+              <div class="cloud-grid">
+                <label class="field">
+                  <span>로그인 이메일</span>
+                  <input id="cloudEmailInput" type="email" autocomplete="email" placeholder="you@example.com" />
+                </label>
+                <div class="cloud-actions">
+                  <button class="secondary-action" id="cloudLoginButton" type="button">로그인 링크 받기</button>
+                  <button class="secondary-action" id="cloudRefreshButton" type="button">상태 확인</button>
+                  <button class="primary-action" id="cloudPushButton" type="button">클라우드 업로드</button>
+                  <button class="secondary-action" id="cloudPullButton" type="button">클라우드 가져오기</button>
+                  <button class="ghost-button" id="cloudSignOutButton" type="button">로그아웃</button>
+                </div>
               </div>
+              <p class="cloud-note" id="cloudNote">Supabase와 Vercel 환경변수를 설정하면 iPhone에서 PC 없이 동기화할 수 있습니다.</p>
             </div>
-            <p class="cloud-note" id="cloudNote">Supabase와 Vercel 환경변수를 설정하면 iPhone에서 PC 없이 동기화할 수 있습니다.</p>
-          </section>
+          </details>
 
           <section class="capture-panel" aria-labelledby="captureTitle">
             <div>

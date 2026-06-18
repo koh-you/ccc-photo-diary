@@ -255,6 +255,7 @@ function cacheElements() {
   elements.todayCount = document.querySelector("#todayCount");
   elements.trashCount = document.querySelector("#trashCount");
   elements.cloudStatusBadge = document.querySelector("#cloudStatusBadge");
+  elements.cloudSummaryCopy = document.querySelector("#cloudSummaryCopy");
   elements.cloudEmailInput = document.querySelector("#cloudEmailInput");
   elements.cloudEmailField = elements.cloudEmailInput?.closest(".field");
   elements.cloudEmailField?.classList.add("cloud-email-field");
@@ -1141,6 +1142,11 @@ function updateCloudUi(statusOverride = null, noteOverride = null) {
   elements.cloudStatusBadge.textContent = status;
   elements.cloudStatusBadge.classList.toggle("is-online", signedIn);
   elements.cloudStatusBadge.classList.toggle("is-offline", !configured);
+  elements.cloudSummaryCopy.textContent = signedIn
+    ? "자동 저장이 켜져 있습니다. 복구나 수동 동기화가 필요할 때 펼치세요."
+    : configured
+      ? "로그인하면 저장할 때마다 Supabase에 자동 보관됩니다."
+      : "Supabase 설정이 필요합니다. 설정과 상태 확인을 위해 펼치세요.";
   elements.cloudNote.textContent = note;
   elements.cloudLoginButton.disabled = cloudBusy || !configured || signedIn;
   elements.cloudRefreshButton.disabled = cloudBusy || !configured;

@@ -2255,3 +2255,87 @@ h2 {
     height: 44px;
   }
 }
+
+/* Compact cloud settings */
+.cloud-settings {
+  display: block;
+  padding: 0;
+}
+
+.cloud-summary {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 14px;
+  min-height: 86px;
+  padding: 18px 20px;
+  cursor: pointer;
+  list-style: none;
+}
+
+.cloud-summary::-webkit-details-marker {
+  display: none;
+}
+
+.cloud-summary::after {
+  content: "펼치기";
+  justify-self: end;
+  grid-column: 1 / -1;
+  color: var(--muted);
+  font-size: 0.78rem;
+  font-weight: 820;
+}
+
+.cloud-settings[open] .cloud-summary::after {
+  content: "접기";
+}
+
+.cloud-summary h2 {
+  margin: 0;
+}
+
+.cloud-summary-copy {
+  margin: 5px 0 0;
+  color: var(--muted);
+  font-size: 0.9rem;
+  font-weight: 720;
+  line-height: 1.42;
+}
+
+.cloud-controls {
+  display: grid;
+  gap: 12px;
+  padding: 0 20px 18px;
+}
+
+.cloud-settings:not([open]) {
+  margin-bottom: 12px;
+}
+
+.cloud-settings:not([open])::before {
+  height: 1px;
+}
+
+.cloud-settings:not([open]) .status-badge {
+  align-self: center;
+}
+
+.cloud-signed-in .cloud-summary-copy {
+  color: var(--moss-dark);
+}
+
+@media (max-width: 560px) {
+  .cloud-summary {
+    min-height: 74px;
+    padding: 14px;
+  }
+
+  .cloud-controls {
+    padding: 0 14px 14px;
+  }
+
+  .cloud-summary-copy {
+    font-size: 0.84rem;
+  }
+}
