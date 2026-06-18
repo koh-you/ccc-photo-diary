@@ -54,11 +54,15 @@ SUPABASE_ANON_KEY=YOUR-SUPABASE-ANON-KEY
 
 ## 4. Current MVP Sync Rules
 
-- Sync is manual, not automatic.
+- After cloud sign-in, saving an entry also uploads that entry to Supabase automatically.
+- Cloud Upload still exists as a manual full sync/backfill button.
 - Cloud Upload overwrites the same entry ID in Supabase.
 - Cloud Pull overwrites the same entry ID in the local IndexedDB.
 - Photos are uploaded to the private `ccc-photos` bucket.
 - Photo paths are scoped by Supabase user ID.
+- Moving an entry to trash or restoring it is also reflected in Supabase when signed in.
+- Permanent delete removes the local entry and also tries to remove the matching Supabase row and stored photos.
+- The Cloud status button checks the Supabase session, `ccc_entries` table, and `ccc-photos` bucket.
 - JSON backup is still useful and should remain a safety backup.
 
 ## Human Decisions Left

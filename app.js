@@ -590,11 +590,12 @@ async function handleFormSubmit(event) {
   };
 
   await putEntry(entry);
+  const cloudSync = await autoSyncEntryToCloud(entry, "기록을 Supabase에 저장했습니다.");
   activeAlbum = entry.category;
   await loadEntries();
   resetForm({ silent: true });
   showAlbum(entry.category);
-  showToast("기록을 저장했습니다.");
+  showToast(getCloudSaveToast("기록을 로컬에 저장했습니다.", "기록을 로컬과 Supabase에 저장했습니다.", cloudSync));
 }
 
 async function handlePhotoSelection(event) {
@@ -1187,7 +1188,12 @@ async function refreshCloudSession() {
     const { data, error } = await supabaseClient.auth.getSession();
     if (error) throw error;
     cloudSession = data.session || null;
-    updateCloudUi(null, cloudSession ? "클라우드 세션이 활성화되어 있습니다." : "아직 로그인 세션이 없습니다.");
+    if (cloudSession) {
+      await checkCloudStorageReady(cloudSession.user.id);
+      updateCloudUi(null, "Supabase DB와 사진 저장소 연결이 정상입니다.");
+    } else {
+      updateCloudUi(null, "아직 로그인 세션이 없습니다.");
+    }
   } catch (error) {
     console.error(error);
     updateCloudUi(null, normalizeCloudError(error));
@@ -1238,6 +1244,33 @@ async function handleCloudPush() {
   }
 }
 
+async function autoSyncEntryToCloud(entry, successMessage) {
+  if (!supabaseClient || !cloudSession?.user) return { status: "skipped" };
+  if (cloudBusy) return { status: "busy" };
+
+  let finalNote = successMessage;
+  try {
+    cloudBusy = true;
+    updateCloudUi(null, "Supabase에 기록을 저장하는 중입니다.");
+    await uploadEntryToCloud(entry, cloudSession.user.id);
+    return { status: "synced" };
+  } catch (error) {
+    console.error(error);
+    finalNote = `로컬 저장은 완료됐지만 Supabase 저장에 실패했습니다: ${normalizeCloudError(error)}`;
+    return { status: "failed", message: finalNote };
+  } finally {
+    cloudBusy = false;
+    updateCloudUi(null, finalNote);
+  }
+}
+
+function getCloudSaveToast(localMessage, cloudMessage, cloudSync) {
+  if (cloudSync?.status === "synced") return cloudMessage;
+  if (cloudSync?.status === "failed") return cloudSync.message;
+  if (cloudSync?.status === "busy") return `${localMessage} 다른 클라우드 작업 중이라 이번 저장은 자동 업로드하지 않았습니다.`;
+  return localMessage;
+}
+
 async function handleCloudPull() {
   try {
     requireCloudSession();
@@ -1281,6 +1314,23 @@ function requireCloudSession() {
   if (!supabaseClient) throw new Error("클라우드 동기화가 아직 설정되지 않았습니다.");
   if (!cloudSession?.user) throw new Error("먼저 클라우드에 로그인해주세요.");
   return cloudSession;
+}
+
+async function checkCloudStorageReady(userId) {
+  if (!supabaseClient) throw new Error("클라우드 동기화가 아직 설정되지 않았습니다.");
+  if (!userId) throw new Error("Supabase 사용자 정보를 확인할 수 없습니다.");
+
+  const { error: tableError } = await supabaseClient.from(CLOUD_ENTRY_TABLE).select("id").limit(1);
+  if (tableError) {
+    throw new Error(`Supabase DB(${CLOUD_ENTRY_TABLE}) 확인 실패: ${tableError.message}`);
+  }
+
+  const { error: storageError } = await supabaseClient.storage.from(CLOUD_PHOTO_BUCKET).list(userId, { limit: 1 });
+  if (storageError) {
+    throw new Error(`Supabase Storage(${CLOUD_PHOTO_BUCKET}) 확인 실패: ${storageError.message}`);
+  }
+
+  return true;
 }
 
 function getCloudRedirectUrl() {
@@ -1354,6 +1404,29 @@ async function uploadEntryToCloud(entry, userId) {
     { onConflict: "user_id,id" }
   );
   if (error) throw error;
+}
+
+async function deleteEntryFromCloud(entry, userId) {
+  if (!supabaseClient || !entry?.id || !userId) return;
+
+  const folderPath = `${userId}/${entry.id}`;
+  const { data: storedPhotos, error: listError } = await supabaseClient.storage
+    .from(CLOUD_PHOTO_BUCKET)
+    .list(folderPath, { limit: 100 });
+  if (listError) throw listError;
+
+  const storagePaths = (storedPhotos || []).map((item) => `${folderPath}/${item.name}`);
+  if (storagePaths.length) {
+    const { error: removeStorageError } = await supabaseClient.storage.from(CLOUD_PHOTO_BUCKET).remove(storagePaths);
+    if (removeStorageError) throw removeStorageError;
+  }
+
+  const { error: deleteRowError } = await supabaseClient
+    .from(CLOUD_ENTRY_TABLE)
+    .delete()
+    .eq("user_id", userId)
+    .eq("id", entry.id);
+  if (deleteRowError) throw deleteRowError;
 }
 
 function serializeEntryForCloud(entry, cloudPhotos) {
@@ -1666,22 +1739,26 @@ async function handleMoveToTrash() {
   const confirmed = window.confirm(`"${entry.title || "무제 기록"}" 기록을 휴지통으로 옮길까요?`);
   if (!confirmed) return;
 
-  await putEntry({ ...entry, deletedAt: new Date().toISOString(), updatedAt: new Date().toISOString() });
+  const updatedEntry = { ...entry, deletedAt: new Date().toISOString(), updatedAt: new Date().toISOString() };
+  await putEntry(updatedEntry);
+  const cloudSync = await autoSyncEntryToCloud(updatedEntry, "휴지통 이동을 Supabase에 반영했습니다.");
   closeDetailDialog();
   await loadEntries();
   showAlbum(entry.category);
-  showToast("휴지통으로 옮겼습니다.");
+  showToast(getCloudSaveToast("휴지통으로 옮겼습니다.", "휴지통 이동을 로컬과 Supabase에 반영했습니다.", cloudSync));
 }
 
 async function handleRestoreEntry() {
   const entry = getOpenDetailEntry();
   if (!entry) return;
 
-  await putEntry({ ...entry, deletedAt: null, updatedAt: new Date().toISOString() });
+  const updatedEntry = { ...entry, deletedAt: null, updatedAt: new Date().toISOString() };
+  await putEntry(updatedEntry);
+  const cloudSync = await autoSyncEntryToCloud(updatedEntry, "복원 상태를 Supabase에 반영했습니다.");
   closeDetailDialog();
   await loadEntries();
   showAlbum(entry.category);
-  showToast("기록을 복원했습니다.");
+  showToast(getCloudSaveToast("기록을 복원했습니다.", "복원 상태를 로컬과 Supabase에 반영했습니다.", cloudSync));
 }
 
 async function handlePermanentDelete() {
@@ -1692,10 +1769,20 @@ async function handlePermanentDelete() {
   if (!confirmed) return;
 
   await removeEntry(entry.id);
+  let cloudDeleteFailed = false;
+  if (supabaseClient && cloudSession?.user) {
+    try {
+      await deleteEntryFromCloud(entry, cloudSession.user.id);
+    } catch (error) {
+      console.error(error);
+      cloudDeleteFailed = true;
+      showToast(`로컬에서는 삭제됐지만 Supabase 삭제에 실패했습니다: ${normalizeCloudError(error)}`);
+    }
+  }
   closeDetailDialog();
   await loadEntries();
   showTrash();
-  showToast("완전히 삭제했습니다.");
+  if (!cloudDeleteFailed) showToast("완전히 삭제했습니다.");
 }
 
 function getOpenDetailEntry() {
