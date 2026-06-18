@@ -1,42 +1,47 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
   <defs>
-    <linearGradient id="ink" x1="70" y1="34" x2="440" y2="478" gradientUnits="userSpaceOnUse">
-      <stop offset="0" stop-color="#27302f"/>
-      <stop offset="0.5" stop-color="#111715"/>
-      <stop offset="1" stop-color="#070a09"/>
+    <linearGradient id="paper" x1="72" y1="42" x2="430" y2="470" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#fffefa"/>
+      <stop offset="0.55" stop-color="#fbf7ef"/>
+      <stop offset="1" stop-color="#e8f3ff"/>
     </linearGradient>
-    <linearGradient id="snow" x1="108" y1="112" x2="422" y2="392" gradientUnits="userSpaceOnUse">
+    <linearGradient id="blue" x1="92" y1="92" x2="418" y2="420" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#2a78cb"/>
+      <stop offset="1" stop-color="#124f98"/>
+    </linearGradient>
+    <linearGradient id="fold" x1="180" y1="88" x2="332" y2="410" gradientUnits="userSpaceOnUse">
       <stop offset="0" stop-color="#ffffff"/>
-      <stop offset="0.58" stop-color="#edf2f1"/>
-      <stop offset="1" stop-color="#aebbbb"/>
-    </linearGradient>
-    <linearGradient id="ice" x1="112" y1="126" x2="398" y2="354" gradientUnits="userSpaceOnUse">
-      <stop offset="0" stop-color="#ffffff"/>
-      <stop offset="0.5" stop-color="#dae9ea"/>
-      <stop offset="1" stop-color="#748889"/>
-    </linearGradient>
-    <linearGradient id="gold" x1="64" y1="350" x2="448" y2="350" gradientUnits="userSpaceOnUse">
-      <stop offset="0" stop-color="#8f7a46"/>
-      <stop offset="0.5" stop-color="#d9c487"/>
-      <stop offset="1" stop-color="#8f7a46"/>
+      <stop offset="1" stop-color="#dbeeff"/>
     </linearGradient>
     <pattern id="grain" width="64" height="64" patternUnits="userSpaceOnUse">
-      <path d="M64 0 0 64M20 0 0 20M64 44 44 64" fill="none" stroke="#f7f8f5" stroke-opacity=".11" stroke-width="3"/>
+      <path d="M64 0 0 64M20 0 0 20M64 44 44 64" fill="none" stroke="#1d67bd" stroke-opacity=".08" stroke-width="3"/>
+    </pattern>
+    <filter id="softShadow" x="-15%" y="-15%" width="130%" height="130%">
+      <feDropShadow dx="10" dy="14" stdDeviation="8" flood-color="#1d67bd" flood-opacity=".15"/>
+      <feDropShadow dx="0" dy="2" stdDeviation="2" flood-color="#917548" flood-opacity=".12"/>
+    </filter>
+    <clipPath id="clip">
+      <rect x="36" y="36" width="440" height="440" rx="84"/>
+    </clipPath>
+    <pattern id="grid" width="52" height="52" patternUnits="userSpaceOnUse">
+      <path d="M52 0H0v52" fill="none" stroke="#1d67bd" stroke-opacity=".11" stroke-width="3"/>
     </pattern>
   </defs>
-  <rect width="512" height="512" rx="76" fill="url(#ink)"/>
-  <rect width="512" height="512" rx="76" fill="url(#grain)"/>
-  <path d="M52 356 154 190l54 78 82-148 170 236v82H52z" fill="url(#snow)"/>
-  <path d="M154 190 208 268 178 258 132 336 82 356zM290 120l70 98-44-12-66 122-42-60z" fill="#ffffff" opacity=".9"/>
-  <path d="M70 357h372" stroke="url(#gold)" stroke-width="7" stroke-linecap="square"/>
-  <g fill="none" stroke="url(#ice)" stroke-width="26" stroke-linecap="square" stroke-linejoin="miter">
-    <path d="M190 216c-22-32-82-26-92 20-10 52 34 88 84 64"/>
-    <path d="M304 216c-22-32-82-26-92 20-10 52 34 88 84 64"/>
-    <path d="M418 216c-22-32-82-26-92 20-10 52 34 88 84 64"/>
+  <rect x="24" y="24" width="464" height="464" rx="92" fill="#1d67bd"/>
+  <rect x="36" y="36" width="440" height="440" rx="84" fill="url(#paper)"/>
+  <g clip-path="url(#clip)">
+    <rect x="36" y="36" width="440" height="440" fill="url(#grid)"/>
+    <rect x="36" y="36" width="440" height="440" fill="url(#grain)"/>
+    <path d="M92 394h328" stroke="#1d67bd" stroke-width="10" stroke-linecap="square" opacity=".9"/>
+    <path d="M338 74 430 166v256H112V74z" fill="url(#fold)" filter="url(#softShadow)"/>
+    <path d="M338 74v92h92" fill="#cfe7ff"/>
+    <path d="M338 74v92h92" fill="none" stroke="#1d67bd" stroke-width="8" stroke-linejoin="miter"/>
+    <path d="M112 74h226l92 92v256H112z" fill="none" stroke="#1d67bd" stroke-width="10" stroke-linejoin="miter"/>
   </g>
-  <g fill="none" stroke="#111715" stroke-width="7" stroke-linecap="square" opacity=".45">
-    <path d="M190 216c-22-32-82-26-92 20-10 52 34 88 84 64"/>
-    <path d="M304 216c-22-32-82-26-92 20-10 52 34 88 84 64"/>
-    <path d="M418 216c-22-32-82-26-92 20-10 52 34 88 84 64"/>
+  <g fill="none" stroke="url(#blue)" stroke-width="28" stroke-linecap="square" stroke-linejoin="miter">
+    <path d="M194 218c-24-30-78-22-88 20-12 50 36 84 82 58"/>
+    <path d="M304 218c-24-30-78-22-88 20-12 50 36 84 82 58"/>
+    <path d="M414 218c-24-30-78-22-88 20-12 50 36 84 82 58"/>
   </g>
+  <path d="M138 340h236" stroke="#e7d8b5" stroke-width="8" stroke-linecap="square"/>
 </svg>

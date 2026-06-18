@@ -38,7 +38,8 @@ module.exports = async function handler(request, response) {
 
   try {
     const body = readBody(request);
-    const apiKey = body.apiKey || process.env.OPENAI_API_KEY;
+    const clientApiKey = body.apiKey;
+    const apiKey = clientApiKey || process.env.OPENAI_API_KEY;
     const model = body.model || process.env.OPENAI_MODEL || "gpt-5.5";
 
     if (!apiKey) {
@@ -53,6 +54,14 @@ module.exports = async function handler(request, response) {
         error: "OpenAI API key must be the full key that starts with sk-."
       });
       return;
+    }
+
+    if (!clientApiKey) {
+      const authResult = await verifySupabaseUser(request);
+      if (!authResult.ok) {
+        sendJson(response, authResult.statusCode, { error: authResult.error });
+        return;
+      }
     }
 
     const content = [{ type: "input_text", text: buildPrompt(body) }];
@@ -134,6 +143,40 @@ function readBody(request) {
   if (!request.body) return {};
   if (typeof request.body === "string") return JSON.parse(request.body || "{}");
   return request.body;
+}
+
+async function verifySupabaseUser(request) {
+  const supabaseUrl = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL || "";
+  const supabaseAnonKey = process.env.SUPABASE_ANON_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "";
+
+  if (!supabaseUrl || !supabaseAnonKey) return { ok: true };
+
+  const authorization = request.headers.authorization || request.headers.Authorization || "";
+  const match = String(authorization).match(/^Bearer\s+(.+)$/i);
+  if (!match) {
+    return {
+      ok: false,
+      statusCode: 401,
+      error: "로그인 세션이 필요합니다. 서버 OpenAI 키를 사용하려면 먼저 CCC 클라우드에 로그인해주세요."
+    };
+  }
+
+  const userResponse = await fetch(`${supabaseUrl.replace(/\/$/, "")}/auth/v1/user`, {
+    headers: {
+      apikey: supabaseAnonKey,
+      Authorization: `Bearer ${match[1]}`
+    }
+  });
+
+  if (!userResponse.ok) {
+    return {
+      ok: false,
+      statusCode: 401,
+      error: "로그인 세션을 확인하지 못했습니다. 다시 로그인한 뒤 AI 호출을 시도해주세요."
+    };
+  }
+
+  return { ok: true };
 }
 
 function buildPrompt(body) {

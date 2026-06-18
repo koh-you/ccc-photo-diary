@@ -1,7 +1,7 @@
 const DB_NAME = "ccc-local-mvp";
 const DB_VERSION = 1;
 const STORE_NAME = "entries";
-const BACKUP_VERSION = 2;
+const BACKUP_VERSION = 3;
 const API_KEY_STORAGE_KEY = "ccc-openai-api-key";
 const API_MODEL_STORAGE_KEY = "ccc-openai-model";
 const CLOUD_EMAIL_STORAGE_KEY = "ccc-cloud-email";
@@ -857,9 +857,16 @@ async function handleRunAi() {
     }
     persistApiSettings();
 
+    const headers = {
+      "Content-Type": "application/json"
+    };
+    if (!apiKey && cloudSession?.access_token) {
+      headers.Authorization = `Bearer ${cloudSession.access_token}`;
+    }
+
     const response = await fetch("/api/analyze", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers,
       body: JSON.stringify({
         category: selectedCategory,
         categoryLabel: getCategoryLabel(selectedCategory),
@@ -1002,6 +1009,14 @@ function normalizeAiError(error) {
 
   if (message.includes("OPENAI_API_KEY")) {
     return "API 키가 없습니다. 앱의 OpenAI API 키 칸에 sk-로 시작하는 전체 키를 입력하거나 서버 환경변수를 설정하세요.";
+  }
+
+  if (message.includes("로그인") || message.includes("Unauthorized") || message.includes("401")) {
+    return "서버 OpenAI 키를 사용하려면 먼저 클라우드에 로그인해주세요. 개인 API 키를 직접 입력해서 호출할 수도 있습니다.";
+  }
+
+  if (message.includes("insufficient_quota") || message.includes("quota") || message.includes("billing")) {
+    return "OpenAI API 할당량이나 결제 설정 때문에 호출이 막혔습니다. OpenAI Platform의 Billing/Usage를 확인한 뒤 다시 시도하세요.";
   }
 
   if (message.includes("model") || message.includes("Model")) {
@@ -1277,12 +1292,133 @@ function getCloudSaveToast(localMessage, cloudMessage, cloudSync) {
   return localMessage;
 }
 
+function createImportSummary() {
+  return {
+    added: 0,
+    updated: 0,
+    skipped: 0,
+    copied: 0,
+    failed: 0
+  };
+}
+
+function formatImportSummary(label, summary) {
+  const parts = [];
+  if (summary.added) parts.push(`새 기록 ${summary.added}개`);
+  if (summary.updated) parts.push(`업데이트 ${summary.updated}개`);
+  if (summary.skipped) parts.push(`유지 ${summary.skipped}개`);
+  if (summary.copied) parts.push(`충돌 사본 ${summary.copied}개`);
+  if (summary.failed) parts.push(`실패 ${summary.failed}개`);
+  return `${label}: ${parts.length ? parts.join(", ") : "변경 없음"}`;
+}
+
+async function putImportedEntrySafely(entry, options = {}) {
+  const summary = options.summary || createImportSummary();
+  const sourceLabel = options.sourceLabel || "가져온 기록";
+  const existing = entry?.id ? await getEntry(entry.id) : null;
+
+  if (!existing) {
+    await putEntry(entry);
+    summary.added += 1;
+    return { status: "added", entry };
+  }
+
+  if (isSameEntrySnapshot(existing, entry)) {
+    summary.skipped += 1;
+    return { status: "same", entry: existing };
+  }
+
+  const localTime = getEntrySyncTime(existing);
+  const incomingTime = getEntrySyncTime(entry, options.fallbackUpdatedAt);
+  if (incomingTime > localTime) {
+    await putEntry(entry);
+    summary.updated += 1;
+    return { status: "updated", entry };
+  }
+
+  if (localTime > incomingTime) {
+    summary.skipped += 1;
+    return { status: "local-newer", entry: existing };
+  }
+
+  const copy = createConflictCopy(entry, sourceLabel);
+  await putEntry(copy);
+  summary.copied += 1;
+  return { status: "copied", entry: copy };
+}
+
+function getEntrySyncTime(entry, fallbackUpdatedAt = null) {
+  const value = entry?.updatedAt || fallbackUpdatedAt || entry?.createdAt || "";
+  const time = Date.parse(value);
+  return Number.isFinite(time) ? time : 0;
+}
+
+function isSameEntrySnapshot(left, right) {
+  return stableStringifyForCompare(left) === stableStringifyForCompare(right);
+}
+
+function stableStringifyForCompare(entry) {
+  const snapshot = {
+    id: entry?.id || "",
+    category: entry?.category || "",
+    title: entry?.title || "",
+    location: entry?.location || null,
+    capturedAt: entry?.capturedAt || "",
+    quickComment: entry?.quickComment || "",
+    detailedComment: entry?.detailedComment || "",
+    reflection: entry?.reflection || "",
+    tags: entry?.tags || [],
+    categoryDetails: entry?.categoryDetails || {},
+    deletedAt: entry?.deletedAt || null,
+    updatedAt: entry?.updatedAt || "",
+    photoMeta: entry?.photoMeta || null,
+    photos: getEntryPhotos(entry).map((photo) => ({
+      id: photo.id || "",
+      meta: photo.meta || null,
+      metadata: photo.metadata || null,
+      isPrimary: Boolean(photo.isPrimary)
+    }))
+  };
+  return JSON.stringify(snapshot);
+}
+
+function createConflictCopy(entry, sourceLabel) {
+  const now = new Date().toISOString();
+  const originalPhotos = getEntryPhotos(entry);
+  const copyId = createId();
+  const copiedPhotos = originalPhotos.map((photo, index) => ({
+    ...photo,
+    id: photo.id || `${copyId}-photo-${index + 1}`,
+    isPrimary: index === 0 || Boolean(photo.isPrimary)
+  }));
+
+  return {
+    ...entry,
+    id: copyId,
+    title: `${entry.title || "무제 기록"} (${sourceLabel} 사본)`,
+    photos: copiedPhotos,
+    photoBlob: copiedPhotos[0]?.blob || null,
+    photoMeta: copiedPhotos[0]?.meta || entry.photoMeta || null,
+    metadata: copiedPhotos[0]?.metadata || entry.metadata || null,
+    createdAt: entry.createdAt || now,
+    updatedAt: now,
+    cloud: {
+      ...(entry.cloud || {}),
+      conflictCopyOf: entry.id || null,
+      conflictSource: sourceLabel,
+      importedAt: now
+    }
+  };
+}
+
 async function handleCloudPull() {
   try {
     requireCloudSession();
     if (!db) throw new Error("로컬 데이터베이스가 아직 준비되지 않았습니다.");
 
-    const confirmed = window.confirm("클라우드 기록을 이 기기로 가져옵니다. 같은 ID의 로컬 기록은 덮어씁니다.");
+    const confirmed = window.confirm(
+      "클라우드 기록을 이 기기로 가져옵니다. 같은 ID는 최신 수정일 기준으로 병합하고, 판단이 어려운 충돌은 사본으로 보관합니다."
+    );
     if (!confirmed) return;
 
     cloudBusy = true;
@@ -1296,16 +1432,22 @@ async function handleCloudPull() {
 
     const rows = data || [];
     let downloaded = 0;
+    const summary = createImportSummary();
     for (const row of rows) {
       downloaded += 1;
       updateCloudUi(null, `가져오는 중 ${downloaded}/${rows.length}`);
       const entry = await inflateCloudEntry(row.payload);
-      await putEntry(entry);
+      await putImportedEntrySafely(entry, {
+        sourceLabel: "클라우드",
+        fallbackUpdatedAt: row.updated_at,
+        summary
+      });
     }
 
     await loadEntries();
-    updateCloudUi(null, `${downloaded}개 기록을 클라우드에서 가져왔습니다.`);
-    showToast("클라우드 기록을 가져왔습니다.");
+    const message = formatImportSummary("클라우드 가져오기", summary);
+    updateCloudUi(null, message);
+    showToast(message);
   } catch (error) {
     console.error(error);
     updateCloudUi(null, normalizeCloudError(error));
@@ -1855,11 +1997,13 @@ async function handleExportBackup() {
 
   showToast("백업 파일을 만드는 중입니다.");
   const backupEntries = [];
+  let photoCount = 0;
   for (const entry of entries) {
     const { photoBlob, photos, ...rest } = entry;
     const normalizedPhotos = getEntryPhotos(entry);
     const photoDataUrls = [];
     for (const photo of normalizedPhotos) {
+      photoCount += 1;
       photoDataUrls.push({
         id: photo.id,
         dataUrl: await blobToDataUrl(photo.blob),
@@ -1875,12 +2019,16 @@ async function handleExportBackup() {
     app: "CCC",
     backupVersion: BACKUP_VERSION,
     exportedAt: new Date().toISOString(),
+    stats: {
+      entries: backupEntries.length,
+      photos: photoCount
+    },
     entries: backupEntries
   };
 
-  const blob = new Blob([JSON.stringify(backup, null, 2)], { type: "application/json" });
+  const blob = new Blob([JSON.stringify(backup, null, 2)], { type: "application/json;charset=utf-8" });
   downloadBlob(blob, `ccc-backup-${formatDateKey(new Date())}.json`);
-  showToast("백업 파일을 만들었습니다.");
+  showToast(`백업 파일을 만들었습니다. 기록 ${backupEntries.length}개, 사진 ${photoCount}개.`);
 }
 
 async function handleImportBackup(event) {
@@ -1892,43 +2040,57 @@ async function handleImportBackup(event) {
     const backup = JSON.parse(text);
     if (!Array.isArray(backup.entries)) throw new Error("Invalid backup.");
 
-    const confirmed = window.confirm(`${backup.entries.length}개 기록을 가져옵니다. 같은 ID가 있으면 덮어씁니다.`);
+    const confirmed = window.confirm(
+      `${backup.entries.length}개 기록을 가져옵니다. 같은 ID는 최신 수정일 기준으로 병합하고, 판단이 어려운 충돌은 사본으로 보관합니다.`
+    );
     if (!confirmed) return;
 
+    const summary = createImportSummary();
     for (const item of backup.entries) {
-      const { photoDataUrl, photoDataUrls, ...entry } = item;
-      const importedPhotos = Array.isArray(photoDataUrls)
-        ? photoDataUrls.map((photo, index) => ({
-            id: photo.id || createId(),
-            blob: dataUrlToBlob(photo.dataUrl),
-            meta: photo.meta || null,
-            metadata: photo.metadata || null,
-            isPrimary: index === 0
-          }))
-        : photoDataUrl
-          ? [
-              {
-                id: createId(),
-                blob: dataUrlToBlob(photoDataUrl),
-                meta: entry.photoMeta || null,
-                metadata: entry.metadata || null,
-                isPrimary: true
-              }
-            ]
-          : [];
-      await putEntry({
-        ...entry,
-        photos: importedPhotos,
-        photoBlob: importedPhotos[0]?.blob || null,
-        photoMeta: importedPhotos[0]?.meta || entry.photoMeta || null,
-        metadata: importedPhotos[0]?.metadata || entry.metadata || null,
-        updatedAt: entry.updatedAt || new Date().toISOString()
-      });
+      try {
+        const { photoDataUrl, photoDataUrls, ...entry } = item;
+        const importedPhotos = Array.isArray(photoDataUrls)
+          ? photoDataUrls.map((photo, index) => ({
+              id: photo.id || createId(),
+              blob: dataUrlToBlob(photo.dataUrl),
+              meta: photo.meta || null,
+              metadata: photo.metadata || null,
+              isPrimary: index === 0
+            }))
+          : photoDataUrl
+            ? [
+                {
+                  id: createId(),
+                  blob: dataUrlToBlob(photoDataUrl),
+                  meta: entry.photoMeta || null,
+                  metadata: entry.metadata || null,
+                  isPrimary: true
+                }
+              ]
+            : [];
+        await putImportedEntrySafely(
+          {
+            ...entry,
+            photos: importedPhotos,
+            photoBlob: importedPhotos[0]?.blob || null,
+            photoMeta: importedPhotos[0]?.meta || entry.photoMeta || null,
+            metadata: importedPhotos[0]?.metadata || entry.metadata || null,
+            updatedAt: entry.updatedAt || new Date().toISOString()
+          },
+          {
+            sourceLabel: "백업",
+            summary
+          }
+        );
+      } catch (error) {
+        console.error(error);
+        summary.failed += 1;
+      }
     }
 
     await loadEntries();
     showHome();
-    showToast("백업을 가져왔습니다.");
+    showToast(formatImportSummary("백업 가져오기", summary));
   } catch (error) {
     console.error(error);
     showToast("백업 파일을 읽지 못했습니다.");
@@ -1981,8 +2143,10 @@ async function handleSaveOriginalPhoto() {
     }
   }
 
-  downloadBlob(photos[0].blob, files[0].name);
-  showToast("첫 번째 원본 사진 다운로드를 시작했습니다.");
+  photos.forEach((photo, index) => {
+    window.setTimeout(() => downloadBlob(photo.blob, files[index].name), index * 250);
+  });
+  showToast(`${photos.length}개 원본 사진 다운로드를 시작했습니다.`);
 }
 
 function buildPrintHtml(entry, imageDataUrls) {
@@ -1996,15 +2160,54 @@ function buildPrintHtml(entry, imageDataUrls) {
   <meta charset="UTF-8" />
   <title>${escapeHtml(entry.title || "CCC 기록")}</title>
   <style>
-    body { margin: 32px; color: #1f2925; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
-    header { border-bottom: 2px solid #26332d; padding-bottom: 14px; margin-bottom: 18px; }
-    small { color: #667269; font-weight: 700; }
-    h1 { margin: 6px 0; font-size: 28px; }
-    img { max-width: 100%; max-height: 620px; object-fit: contain; border: 1px solid #d8ded6; }
-    dl { display: grid; grid-template-columns: 130px 1fr; gap: 9px 14px; margin-top: 18px; }
-    dt { color: #667269; font-weight: 800; }
+    :root { color: #12345b; background: #fffdf8; }
+    body {
+      margin: 32px;
+      color: #12345b;
+      background: #fffdf8;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      line-height: 1.55;
+    }
+    header {
+      border: 2px solid #1d67bd;
+      border-left-width: 10px;
+      padding: 18px 20px;
+      margin-bottom: 22px;
+      background: linear-gradient(135deg, #fffdf8, #eef7ff);
+    }
+    small { color: #155caf; font-weight: 800; letter-spacing: .02em; text-transform: uppercase; }
+    h1 { margin: 8px 0; font-size: 30px; color: #12345b; }
+    figure { break-inside: avoid; margin: 0 0 18px; }
+    img {
+      display: block;
+      max-width: 100%;
+      max-height: 620px;
+      object-fit: contain;
+      border: 1px solid rgba(29, 103, 189, .28);
+      background: #eef7ff;
+    }
+    dl {
+      display: grid;
+      grid-template-columns: 132px 1fr;
+      gap: 10px 16px;
+      margin-top: 22px;
+      padding-top: 18px;
+      border-top: 2px solid rgba(29, 103, 189, .22);
+    }
+    dt { color: #155caf; font-weight: 850; }
     dd { margin: 0; white-space: pre-wrap; }
-    @media print { body { margin: 18mm; } }
+    footer {
+      margin-top: 28px;
+      padding-top: 12px;
+      border-top: 1px solid rgba(29, 103, 189, .2);
+      color: #687889;
+      font-size: 12px;
+    }
+    @media print {
+      body { margin: 16mm; }
+      header { break-inside: avoid; }
+      figure { page-break-inside: avoid; }
+    }
   </style>
 </head>
 <body>
@@ -2013,8 +2216,9 @@ function buildPrintHtml(entry, imageDataUrls) {
     <h1>${escapeHtml(entry.title || "무제 기록")}</h1>
     <small>${escapeHtml(formatDateLong(entry.capturedAt || entry.createdAt))}</small>
   </header>
-  ${imageDataUrls.map((imageDataUrl, index) => `<img src="${imageDataUrl}" alt="${index + 1}번째 사진" />`).join("")}
+  ${imageDataUrls.map((imageDataUrl, index) => `<figure><img src="${imageDataUrl}" alt="${index + 1}번째 사진" /></figure>`).join("")}
   <dl>${details}</dl>
+  <footer>CCC · Capture · Crop · Carving · ${escapeHtml(new Date().toLocaleString("ko-KR"))}</footer>
 </body>
 </html>`;
 }
