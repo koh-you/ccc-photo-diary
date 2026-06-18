@@ -177,6 +177,7 @@ let cloudConfig = null;
 let supabaseClient = null;
 let cloudSession = null;
 let cloudBusy = false;
+let cloudAuthNotice = null;
 
 const elements = {};
 
@@ -1064,7 +1065,12 @@ function clearSavedApiKey() {
 async function initCloud() {
   const savedEmail = localStorage.getItem(CLOUD_EMAIL_STORAGE_KEY) || "";
   if (elements.cloudEmailInput) elements.cloudEmailInput.value = savedEmail;
+  cloudAuthNotice = readCloudAuthRedirectNotice();
   updateCloudUi("Local", "Supabase settings are not loaded yet.");
+  if (cloudAuthNotice) {
+    updateCloudUi("Auth", cloudAuthNotice.note);
+    showToast(cloudAuthNotice.toast);
+  }
 
   if (window.location.protocol === "file:") {
     updateCloudUi("Local", "Cloud sync needs an http or https address.");
@@ -1118,6 +1124,7 @@ function updateCloudUi(statusOverride = null, noteOverride = null) {
   const status = statusOverride || (signedIn ? "Cloud" : configured ? "Ready" : "Local");
   const note =
     noteOverride ||
+    (!signedIn && cloudAuthNotice?.note) ||
     (signedIn
       ? `Signed in as ${cloudSession.user.email || cloudSession.user.id}.`
       : configured
@@ -1145,7 +1152,7 @@ async function handleCloudLogin() {
     cloudBusy = true;
     updateCloudUi(null, "Sending a Supabase login link...");
 
-    const redirectTo = `${window.location.origin}${window.location.pathname}`;
+    const redirectTo = getCloudRedirectUrl();
     const { error } = await supabaseClient.auth.signInWithOtp({
       email,
       options: {
@@ -1155,7 +1162,8 @@ async function handleCloudLogin() {
     });
     if (error) throw error;
 
-    updateCloudUi(null, "Login link sent. Open it on this iPhone/browser.");
+    cloudAuthNotice = null;
+    updateCloudUi(null, `Login link sent. It should return to ${redirectTo}`);
     showToast("로그인 링크를 이메일로 보냈습니다.");
   } catch (error) {
     console.error(error);
@@ -1267,6 +1275,40 @@ function requireCloudSession() {
   if (!supabaseClient) throw new Error("Cloud sync is not configured yet.");
   if (!cloudSession?.user) throw new Error("Sign in to cloud first.");
   return cloudSession;
+}
+
+function getCloudRedirectUrl() {
+  const url = new URL(window.location.href);
+  url.search = "";
+  url.hash = "";
+  return url.toString();
+}
+
+function readCloudAuthRedirectNotice() {
+  const params = new URLSearchParams(window.location.search || "");
+  const hashText = window.location.hash?.startsWith("#") ? window.location.hash.slice(1) : window.location.hash || "";
+  const hashParams = new URLSearchParams(hashText);
+  const error = params.get("error") || hashParams.get("error");
+  const errorCode = params.get("error_code") || hashParams.get("error_code");
+  const description = params.get("error_description") || hashParams.get("error_description");
+
+  if (!error && !errorCode && !description) return null;
+
+  if (window.history?.replaceState) {
+    window.history.replaceState(null, "", `${window.location.origin}${window.location.pathname}`);
+  }
+
+  if (errorCode === "otp_expired" || /expired/i.test(description || "")) {
+    return {
+      toast: "로그인 링크가 만료되었습니다. 새 링크를 다시 받아주세요.",
+      note: "로그인 링크가 만료되었거나 이미 사용되었습니다. 이메일을 다시 입력하고 새 로그인 링크를 받아주세요. 링크가 localhost로 열린다면 Supabase Authentication URL Configuration에서 Site URL을 https://ccc-photo-diary.vercel.app 으로 바꿔야 합니다."
+    };
+  }
+
+  return {
+    toast: "클라우드 로그인 링크를 처리하지 못했습니다.",
+    note: `클라우드 로그인 오류: ${errorCode || error || description}. 새 로그인 링크를 다시 받아주세요. 링크가 localhost로 열린다면 Supabase 리디렉션 URL 설정이 필요합니다.`
+  };
 }
 
 async function uploadEntryToCloud(entry, userId) {
