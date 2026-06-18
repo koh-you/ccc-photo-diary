@@ -173,12 +173,19 @@
                 </div>
                 <div class="field-grid">
                   <label class="field">
-                    <span>OpenAI API 키</span>
+                    <span>AI 제공자</span>
+                    <select id="apiProviderInput">
+                      <option value="anthropic" selected>Claude API</option>
+                      <option value="openai">OpenAI API</option>
+                    </select>
+                  </label>
+                  <label class="field">
+                    <span id="apiKeyLabel">Claude API 키</span>
                     <input id="apiKeyInput" type="password" autocomplete="off" placeholder="서버 환경변수 대신 임시 입력 가능" />
                   </label>
                   <label class="field">
                     <span>모델</span>
-                    <input id="apiModelInput" type="text" autocomplete="off" value="gpt-5.5" />
+                    <input id="apiModelInput" type="text" autocomplete="off" value="claude-sonnet-4-6" />
                   </label>
                 </div>
                 <div class="api-key-row">

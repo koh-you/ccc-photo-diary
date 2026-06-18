@@ -6,7 +6,7 @@ This checklist separates automated checks from iPhone-only checks.
 
 - Production URL responds.
 - `/api/health` reports Vercel runtime.
-- OpenAI server key is configured.
+- Claude server key is configured.
 - Supabase URL and anon key are configured.
 - White Cube is the only active design.
 - Design switcher UI and theme persistence code are removed.
@@ -24,14 +24,14 @@ This checklist separates automated checks from iPhone-only checks.
 - JSON backup includes entry and photo counts.
 - PDF export uses the White Cube print style.
 - Original photo export attempts all photos when Web Share is unavailable.
-- Frontend files do not contain a hard-coded OpenAI secret.
-- `/api/analyze` requires a Supabase session before using the server OpenAI key.
-- `/api/analyze` still allows a user-provided OpenAI key for direct personal testing.
+- Frontend files do not contain a hard-coded AI secret.
+- `/api/analyze` requires a Supabase session before using a server AI key.
+- `/api/analyze` still allows a user-provided Claude/OpenAI key for direct personal testing.
 
 ## Current known blocker
 
-- A live AI call reached the server, but OpenAI returned `insufficient_quota`.
-- Fix this in OpenAI Platform Billing/Usage before expecting AI drafts to succeed with the server key.
+- Claude is now the default AI provider.
+- A live AI call requires `ANTHROPIC_API_KEY` in Vercel or a user-provided `sk-ant-...` key.
 
 ## iPhone manual checks
 
@@ -57,8 +57,8 @@ This checklist separates automated checks from iPhone-only checks.
 20. Confirm a same-ID conflict is skipped, updated, or imported as a copy instead of silently overwriting local work.
 21. Export PDF from a detail page.
 22. Use original photo save/share and confirm all selected photos are offered or downloaded.
-23. After OpenAI billing is fixed, run one AI draft on food or wine.
-24. After OpenAI billing is fixed, run one AI draft on a math problem.
+23. After `ANTHROPIC_API_KEY` is configured, run one Claude draft on food or wine.
+24. After `ANTHROPIC_API_KEY` is configured, run one Claude draft on a math problem.
 25. Confirm AI drafts are editable before saving.
 
 ## Product decisions still open

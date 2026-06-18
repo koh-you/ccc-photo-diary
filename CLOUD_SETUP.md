@@ -4,7 +4,7 @@ This turns the local CCC MVP into a cloud-backed PWA:
 
 - Vercel serves the app and `/api/*` serverless functions.
 - Supabase stores login users, entry JSON, and original photos.
-- OpenAI is called only from the Vercel backend, not directly from the iPhone browser.
+- Claude/OpenAI are called only from the Vercel backend, not directly from the iPhone browser.
 
 ## 1. Supabase
 
@@ -33,13 +33,15 @@ outputs/photo-diary-local-app
 Set these Vercel Environment Variables:
 
 ```text
-OPENAI_API_KEY=sk-...
-OPENAI_MODEL=gpt-5.5
+ANTHROPIC_API_KEY=sk-ant-...
+ANTHROPIC_MODEL=claude-sonnet-4-6
+OPENAI_API_KEY=sk-...              # optional fallback
+OPENAI_MODEL=gpt-5.5               # optional fallback
 SUPABASE_URL=https://YOUR-PROJECT.supabase.co
 SUPABASE_ANON_KEY=YOUR-SUPABASE-ANON-KEY
 ```
 
-`SUPABASE_ANON_KEY` is allowed to be visible in the browser when Row Level Security is enabled. `OPENAI_API_KEY` must stay server-side only.
+`SUPABASE_ANON_KEY` is allowed to be visible in the browser when Row Level Security is enabled. `ANTHROPIC_API_KEY` and `OPENAI_API_KEY` must stay server-side only.
 
 ## 3. iPhone Use
 
@@ -71,4 +73,4 @@ SUPABASE_ANON_KEY=YOUR-SUPABASE-ANON-KEY
 - Pick the Supabase project region.
 - Decide whether email magic-link login is enough, or whether Google/Apple login should be added later.
 - Decide whether sync should remain manual or become automatic after each save.
-- Decide the OpenAI model and monthly budget limit.
+- Decide the Claude/OpenAI model and monthly budget limit.

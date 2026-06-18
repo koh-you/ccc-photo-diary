@@ -2,12 +2,32 @@ const DB_NAME = "ccc-local-mvp";
 const DB_VERSION = 1;
 const STORE_NAME = "entries";
 const BACKUP_VERSION = 3;
-const API_KEY_STORAGE_KEY = "ccc-openai-api-key";
-const API_MODEL_STORAGE_KEY = "ccc-openai-model";
+const API_PROVIDER_STORAGE_KEY = "ccc-ai-provider";
+const API_KEY_STORAGE_PREFIX = "ccc-ai-api-key";
+const API_MODEL_STORAGE_PREFIX = "ccc-ai-model";
+const LEGACY_OPENAI_API_KEY_STORAGE_KEY = "ccc-openai-api-key";
+const LEGACY_OPENAI_MODEL_STORAGE_KEY = "ccc-openai-model";
 const CLOUD_EMAIL_STORAGE_KEY = "ccc-cloud-email";
 const CLOUD_CONFIG_URL = "/api/config";
 const CLOUD_ENTRY_TABLE = "ccc_entries";
 const CLOUD_PHOTO_BUCKET = "ccc-photos";
+const DEFAULT_AI_PROVIDER = "anthropic";
+const AI_PROVIDERS = {
+  anthropic: {
+    label: "Claude API",
+    keyLabel: "Claude API 키",
+    keyPrefix: "sk-ant-",
+    defaultModel: "claude-sonnet-4-6",
+    serverKeyLabel: "Claude 서버 키"
+  },
+  openai: {
+    label: "OpenAI API",
+    keyLabel: "OpenAI API 키",
+    keyPrefix: "sk-",
+    defaultModel: "gpt-5.5",
+    serverKeyLabel: "OpenAI 서버 키"
+  }
+};
 
 const categories = {
   food: {
@@ -230,6 +250,8 @@ function cacheElements() {
   elements.categoryDetailsTitle = document.querySelector("#categoryDetailsTitle");
   elements.categoryFields = document.querySelector("#categoryFields");
   elements.aiPromptInput = document.querySelector("#aiPromptInput");
+  elements.apiProviderInput = document.querySelector("#apiProviderInput");
+  elements.apiKeyLabel = document.querySelector("#apiKeyLabel");
   elements.apiKeyInput = document.querySelector("#apiKeyInput");
   elements.apiModelInput = document.querySelector("#apiModelInput");
   elements.rememberApiKeyInput = document.querySelector("#rememberApiKeyInput");
@@ -313,6 +335,7 @@ function bindEvents() {
   elements.runAiButton.addEventListener("click", handleRunAi);
   elements.applyAiButton.addEventListener("click", applyAiDraft);
   elements.checkAiServerButton.addEventListener("click", checkAiServer);
+  elements.apiProviderInput.addEventListener("change", handleApiProviderChange);
   elements.rememberApiKeyInput.addEventListener("change", handleRememberApiKeyChange);
   elements.apiKeyInput.addEventListener("input", handleApiKeyInput);
   elements.clearSavedApiKeyButton.addEventListener("click", clearSavedApiKey);
@@ -850,10 +873,11 @@ async function handleRunAi() {
 
   try {
     const imageDataUrls = await Promise.all(sourcePhotos.slice(0, 4).map((photo) => makeAiImageDataUrl(photo.blob)));
+    const provider = getSelectedAiProvider();
     const apiKey = elements.apiKeyInput.value.trim();
     const model = elements.apiModelInput.value.trim();
-    if (apiKey && !apiKey.startsWith("sk-")) {
-      throw new Error("API 키는 sk-로 시작하는 전체 키여야 합니다.");
+    if (apiKey && !isValidApiKeyForProvider(apiKey, provider)) {
+      throw new Error(getApiKeyFormatMessage(provider));
     }
     persistApiSettings();
 
@@ -868,6 +892,7 @@ async function handleRunAi() {
       method: "POST",
       headers,
       body: JSON.stringify({
+        provider,
         category: selectedCategory,
         categoryLabel: getCategoryLabel(selectedCategory),
         prompt,
@@ -916,10 +941,16 @@ async function checkAiServer() {
     const payload = await response.json();
     if (!response.ok) throw new Error(payload.error || "서버 상태 확인 실패");
 
-    const keyStatus = payload.hasServerApiKey ? "서버 API 키 있음" : "서버 API 키 없음, 앱 입력 키 사용 가능";
+    const provider = getSelectedAiProvider();
+    const providerConfig = getAiProviderConfig(provider);
+    const providerStatus = payload.providers?.[provider] || {};
+    const keyStatus = providerStatus.hasServerApiKey
+      ? `${providerConfig.serverKeyLabel} 있음`
+      : `${providerConfig.serverKeyLabel} 없음, 앱 입력 키 사용 가능`;
     const runtimeStatus = payload.runtime ? `런타임: ${payload.runtime}` : `포트: ${payload.port || "local"}`;
     const cloudStatus = payload.hasSupabase ? "Supabase 설정 있음" : "Supabase 설정 없음";
-    showAiMessage(`서버 연결 정상\n${runtimeStatus}\n모델: ${payload.model}\n${keyStatus}\n${cloudStatus}`);
+    const model = providerStatus.model || payload.model || providerConfig.defaultModel;
+    showAiMessage(`서버 연결 정상\n${runtimeStatus}\nAI: ${providerConfig.label}\n모델: ${model}\n${keyStatus}\n${cloudStatus}`);
   } catch (error) {
     showAiMessage(normalizeAiError(error));
   }
@@ -1003,20 +1034,20 @@ function normalizeAiError(error) {
     return "AI 서버에 연결할 수 없습니다. node server.js가 실행 중인지, iPhone 주소가 맞는지 확인하세요.";
   }
 
-  if (message.includes("expected pattern") || message.includes("sk-")) {
-    return "API 키 형식이 맞지 않습니다. sk-로 시작하는 전체 OpenAI API 키를 입력하세요.";
+  if (message.includes("expected pattern") || message.includes("sk-ant-") || message.includes("sk-")) {
+    return "API 키 형식이 맞지 않습니다. Claude는 sk-ant-, OpenAI는 sk-로 시작하는 전체 API 키를 입력하세요.";
   }
 
-  if (message.includes("OPENAI_API_KEY")) {
-    return "API 키가 없습니다. 앱의 OpenAI API 키 칸에 sk-로 시작하는 전체 키를 입력하거나 서버 환경변수를 설정하세요.";
+  if (message.includes("ANTHROPIC_API_KEY") || message.includes("OPENAI_API_KEY")) {
+    return "서버 API 키가 없습니다. Claude는 ANTHROPIC_API_KEY, OpenAI는 OPENAI_API_KEY를 Vercel 환경변수에 설정하거나 앱에 개인 키를 직접 입력하세요.";
   }
 
   if (message.includes("로그인") || message.includes("Unauthorized") || message.includes("401")) {
-    return "서버 OpenAI 키를 사용하려면 먼저 클라우드에 로그인해주세요. 개인 API 키를 직접 입력해서 호출할 수도 있습니다.";
+    return "서버 AI 키를 사용하려면 먼저 클라우드에 로그인해주세요. 개인 API 키를 직접 입력해서 호출할 수도 있습니다.";
   }
 
-  if (message.includes("insufficient_quota") || message.includes("quota") || message.includes("billing")) {
-    return "OpenAI API 할당량이나 결제 설정 때문에 호출이 막혔습니다. OpenAI Platform의 Billing/Usage를 확인한 뒤 다시 시도하세요.";
+  if (message.includes("insufficient_quota") || message.includes("quota") || message.includes("billing") || message.includes("credit")) {
+    return "선택한 AI API의 할당량이나 결제 설정 때문에 호출이 막혔습니다. Anthropic/OpenAI 콘솔의 Billing 또는 Usage를 확인한 뒤 다시 시도하세요.";
   }
 
   if (message.includes("model") || message.includes("Model")) {
@@ -1027,45 +1058,61 @@ function normalizeAiError(error) {
 }
 
 function loadSavedApiSettings() {
-  const savedKey = localStorage.getItem(API_KEY_STORAGE_KEY) || "";
-  const savedModel = localStorage.getItem(API_MODEL_STORAGE_KEY) || "";
+  const savedProvider = normalizeAiProvider(localStorage.getItem(API_PROVIDER_STORAGE_KEY));
+  elements.apiProviderInput.value = savedProvider;
+  loadApiSettingsForProvider(savedProvider);
+}
 
-  if (savedKey) {
-    elements.apiKeyInput.value = savedKey;
-    elements.rememberApiKeyInput.checked = true;
-  }
+function loadApiSettingsForProvider(provider) {
+  const providerConfig = getAiProviderConfig(provider);
+  const savedKey = getSavedApiKey(provider);
+  const savedModel = getSavedApiModel(provider);
 
-  elements.apiModelInput.value = savedModel || elements.apiModelInput.value || "gpt-5.5";
+  elements.apiKeyInput.value = savedKey;
+  elements.rememberApiKeyInput.checked = Boolean(savedKey);
+  elements.apiModelInput.value = savedModel || providerConfig.defaultModel;
+  updateApiProviderUi(provider);
 }
 
 function persistApiSettings() {
+  const provider = getSelectedAiProvider();
+  localStorage.setItem(API_PROVIDER_STORAGE_KEY, provider);
+
   const model = elements.apiModelInput.value.trim();
   if (model) {
-    localStorage.setItem(API_MODEL_STORAGE_KEY, model);
+    localStorage.setItem(getApiModelStorageKey(provider), model);
   }
 
   const apiKey = elements.apiKeyInput.value.trim();
   if (!elements.rememberApiKeyInput.checked) return;
 
-  if (!apiKey.startsWith("sk-")) {
-    showToast("API 키는 sk-로 시작해야 저장됩니다.");
+  if (!isValidApiKeyForProvider(apiKey, provider)) {
+    showToast(getApiKeyFormatMessage(provider));
     return;
   }
 
-  localStorage.setItem(API_KEY_STORAGE_KEY, apiKey);
+  localStorage.setItem(getApiKeyStorageKey(provider), apiKey);
+}
+
+function handleApiProviderChange() {
+  const provider = getSelectedAiProvider();
+  localStorage.setItem(API_PROVIDER_STORAGE_KEY, provider);
+  loadApiSettingsForProvider(provider);
+  showToast(`${getAiProviderConfig(provider).label}로 전환했습니다.`);
 }
 
 function handleRememberApiKeyChange() {
+  const provider = getSelectedAiProvider();
   if (elements.rememberApiKeyInput.checked) {
     persistApiSettings();
-    if (localStorage.getItem(API_KEY_STORAGE_KEY)) {
-      showToast("이 기기에 API 키를 저장했습니다.");
+    if (localStorage.getItem(getApiKeyStorageKey(provider))) {
+      showToast(`${getAiProviderConfig(provider).label} 키를 이 기기에 저장했습니다.`);
     }
     return;
   }
 
-  localStorage.removeItem(API_KEY_STORAGE_KEY);
-  showToast("저장된 API 키를 삭제했습니다.");
+  localStorage.removeItem(getApiKeyStorageKey(provider));
+  showToast("선택한 AI의 저장된 API 키를 삭제했습니다.");
 }
 
 function handleApiKeyInput() {
@@ -1075,10 +1122,63 @@ function handleApiKeyInput() {
 }
 
 function clearSavedApiKey() {
-  localStorage.removeItem(API_KEY_STORAGE_KEY);
+  const provider = getSelectedAiProvider();
+  localStorage.removeItem(getApiKeyStorageKey(provider));
   elements.apiKeyInput.value = "";
   elements.rememberApiKeyInput.checked = false;
-  showToast("저장된 API 키를 삭제했습니다.");
+  showToast(`${getAiProviderConfig(provider).label}의 저장된 API 키를 삭제했습니다.`);
+}
+
+function getSelectedAiProvider() {
+  return normalizeAiProvider(elements.apiProviderInput?.value);
+}
+
+function normalizeAiProvider(provider) {
+  return Object.prototype.hasOwnProperty.call(AI_PROVIDERS, provider) ? provider : DEFAULT_AI_PROVIDER;
+}
+
+function getAiProviderConfig(provider) {
+  return AI_PROVIDERS[normalizeAiProvider(provider)];
+}
+
+function getApiKeyStorageKey(provider) {
+  return `${API_KEY_STORAGE_PREFIX}-${normalizeAiProvider(provider)}`;
+}
+
+function getApiModelStorageKey(provider) {
+  return `${API_MODEL_STORAGE_PREFIX}-${normalizeAiProvider(provider)}`;
+}
+
+function getSavedApiKey(provider) {
+  const normalizedProvider = normalizeAiProvider(provider);
+  const savedKey = localStorage.getItem(getApiKeyStorageKey(normalizedProvider));
+  if (savedKey) return savedKey;
+  if (normalizedProvider === "openai") return localStorage.getItem(LEGACY_OPENAI_API_KEY_STORAGE_KEY) || "";
+  return "";
+}
+
+function getSavedApiModel(provider) {
+  const normalizedProvider = normalizeAiProvider(provider);
+  const savedModel = localStorage.getItem(getApiModelStorageKey(normalizedProvider));
+  if (savedModel) return savedModel;
+  if (normalizedProvider === "openai") return localStorage.getItem(LEGACY_OPENAI_MODEL_STORAGE_KEY) || "";
+  return "";
+}
+
+function updateApiProviderUi(provider) {
+  const providerConfig = getAiProviderConfig(provider);
+  elements.apiKeyLabel.textContent = providerConfig.keyLabel;
+  elements.apiKeyInput.placeholder = `${providerConfig.keyPrefix}... 또는 서버 환경변수 사용`;
+}
+
+function isValidApiKeyForProvider(apiKey, provider) {
+  if (!apiKey) return false;
+  return apiKey.startsWith(getAiProviderConfig(provider).keyPrefix);
+}
+
+function getApiKeyFormatMessage(provider) {
+  const providerConfig = getAiProviderConfig(provider);
+  return `${providerConfig.label} 키는 ${providerConfig.keyPrefix}로 시작하는 전체 키여야 합니다.`;
 }
 
 async function initCloud() {

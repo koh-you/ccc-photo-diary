@@ -30,6 +30,22 @@ const detailKeys = [
   "needSimilarProblems"
 ];
 
+const DEFAULT_PROVIDER = "anthropic";
+const AI_PROVIDERS = {
+  anthropic: {
+    label: "Claude API",
+    keyPrefix: "sk-ant-",
+    defaultModel: process.env.ANTHROPIC_MODEL || "claude-sonnet-4-6",
+    envKeyName: "ANTHROPIC_API_KEY"
+  },
+  openai: {
+    label: "OpenAI API",
+    keyPrefix: "sk-",
+    defaultModel: process.env.OPENAI_MODEL || "gpt-5.5",
+    envKeyName: "OPENAI_API_KEY"
+  }
+};
+
 module.exports = async function handler(request, response) {
   if (request.method !== "POST") {
     sendJson(response, 405, { error: "Method not allowed" });
@@ -38,20 +54,22 @@ module.exports = async function handler(request, response) {
 
   try {
     const body = readBody(request);
+    const provider = normalizeProvider(body.provider);
+    const providerConfig = getProviderConfig(provider);
     const clientApiKey = body.apiKey;
-    const apiKey = clientApiKey || process.env.OPENAI_API_KEY;
-    const model = body.model || process.env.OPENAI_MODEL || "gpt-5.5";
+    const apiKey = clientApiKey || getServerApiKey(provider);
+    const model = body.model || providerConfig.defaultModel;
 
     if (!apiKey) {
       sendJson(response, 400, {
-        error: "OPENAI_API_KEY is not set on the server. Set it in Vercel Environment Variables."
+        error: `${providerConfig.envKeyName} is not set on the server. Set it in Vercel Environment Variables.`
       });
       return;
     }
 
-    if (!apiKey.startsWith("sk-")) {
+    if (!apiKey.startsWith(providerConfig.keyPrefix)) {
       sendJson(response, 400, {
-        error: "OpenAI API key must be the full key that starts with sk-."
+        error: `${providerConfig.label} key must be the full key that starts with ${providerConfig.keyPrefix}.`
       });
       return;
     }
@@ -64,65 +82,37 @@ module.exports = async function handler(request, response) {
       }
     }
 
-    const content = [{ type: "input_text", text: buildPrompt(body) }];
     const imageDataUrls = Array.isArray(body.imageDataUrls) && body.imageDataUrls.length
       ? body.imageDataUrls
       : body.imageDataUrl
         ? [body.imageDataUrl]
         : [];
 
-    imageDataUrls.slice(0, 4).forEach((imageDataUrl) => {
-      content.push({ type: "input_image", image_url: imageDataUrl });
-    });
-
-    const apiResponse = await fetch("https://api.openai.com/v1/responses", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${apiKey}`
-      },
-      body: JSON.stringify({
-        model,
-        input: [
-          {
-            role: "user",
-            content
-          }
-        ],
-        text: {
-          format: {
-            type: "json_schema",
-            name: "ccc_analysis",
-            strict: true,
-            schema: buildAnalysisSchema()
-          }
-        }
-      })
-    });
-
-    const payload = await apiResponse.json();
-    if (!apiResponse.ok) {
-      sendJson(response, apiResponse.status, {
-        error: payload.error?.message || "OpenAI API request failed.",
-        details: payload.error || payload
+    const analysis = provider === "openai"
+      ? await runOpenAiAnalysis({ apiKey, model, body, imageDataUrls })
+      : await runAnthropicAnalysis({ apiKey, model, body, imageDataUrls });
+    if (!analysis.ok) {
+      sendJson(response, analysis.status, {
+        error: analysis.error,
+        details: analysis.details
       });
       return;
     }
 
-    const text = extractOutputText(payload);
     let result;
     try {
-      result = JSON.parse(text);
+      result = JSON.parse(analysis.text);
     } catch (error) {
       sendJson(response, 502, {
         error: "AI response was not valid JSON.",
-        raw: text
+        raw: analysis.text
       });
       return;
     }
 
     sendJson(response, 200, {
-      model: payload.model || model,
+      provider,
+      model: analysis.model || model,
       result
     });
   } catch (error) {
@@ -143,6 +133,141 @@ function readBody(request) {
   if (!request.body) return {};
   if (typeof request.body === "string") return JSON.parse(request.body || "{}");
   return request.body;
+}
+
+function normalizeProvider(provider) {
+  return Object.prototype.hasOwnProperty.call(AI_PROVIDERS, provider) ? provider : DEFAULT_PROVIDER;
+}
+
+function getProviderConfig(provider) {
+  return AI_PROVIDERS[normalizeProvider(provider)];
+}
+
+function getServerApiKey(provider) {
+  if (provider === "openai") return process.env.OPENAI_API_KEY || "";
+  return process.env.ANTHROPIC_API_KEY || "";
+}
+
+async function runOpenAiAnalysis({ apiKey, model, body, imageDataUrls }) {
+  const content = [{ type: "input_text", text: buildPrompt(body) }];
+  imageDataUrls.slice(0, 4).forEach((imageDataUrl) => {
+    content.push({ type: "input_image", image_url: imageDataUrl });
+  });
+
+  const apiResponse = await fetch("https://api.openai.com/v1/responses", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${apiKey}`
+    },
+    body: JSON.stringify({
+      model,
+      input: [
+        {
+          role: "user",
+          content
+        }
+      ],
+      text: {
+        format: {
+          type: "json_schema",
+          name: "ccc_analysis",
+          strict: true,
+          schema: buildAnalysisSchema()
+        }
+      }
+    })
+  });
+
+  const payload = await apiResponse.json();
+  if (!apiResponse.ok) {
+    return {
+      ok: false,
+      status: apiResponse.status,
+      error: payload.error?.message || "OpenAI API request failed.",
+      details: payload.error || payload
+    };
+  }
+
+  return {
+    ok: true,
+    model: payload.model || model,
+    text: extractOpenAiOutputText(payload)
+  };
+}
+
+async function runAnthropicAnalysis({ apiKey, model, body, imageDataUrls }) {
+  const content = [{ type: "text", text: buildPrompt(body) }];
+  imageDataUrls.slice(0, 4).forEach((imageDataUrl) => {
+    const imageSource = parseImageDataUrl(imageDataUrl);
+    if (!imageSource) return;
+    content.push({
+      type: "image",
+      source: imageSource
+    });
+  });
+
+  const apiResponse = await fetch("https://api.anthropic.com/v1/messages", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "anthropic-version": "2023-06-01",
+      "x-api-key": apiKey
+    },
+    body: JSON.stringify({
+      model,
+      max_tokens: 1800,
+      messages: [
+        {
+          role: "user",
+          content
+        }
+      ],
+      output_config: {
+        format: {
+          type: "json_schema",
+          schema: buildAnalysisSchema()
+        }
+      }
+    })
+  });
+
+  const payload = await apiResponse.json();
+  if (!apiResponse.ok) {
+    return {
+      ok: false,
+      status: apiResponse.status,
+      error: payload.error?.message || "Anthropic API request failed.",
+      details: payload.error || payload
+    };
+  }
+
+  return {
+    ok: true,
+    model: payload.model || model,
+    text: extractAnthropicOutputText(payload)
+  };
+}
+
+function parseImageDataUrl(dataUrl) {
+  const match = String(dataUrl || "").match(/^data:([^;]+);base64,(.+)$/);
+  if (!match) return null;
+
+  const mediaType = normalizeClaudeImageMediaType(match[1]);
+  if (!mediaType) return null;
+
+  return {
+    type: "base64",
+    media_type: mediaType,
+    data: match[2]
+  };
+}
+
+function normalizeClaudeImageMediaType(mediaType) {
+  const normalized = String(mediaType || "").toLowerCase();
+  if (normalized === "image/jpg") return "image/jpeg";
+  if (["image/jpeg", "image/png", "image/gif", "image/webp"].includes(normalized)) return normalized;
+  return "image/jpeg";
 }
 
 async function verifySupabaseUser(request) {
@@ -231,10 +356,15 @@ function buildAnalysisSchema() {
   };
 }
 
-function extractOutputText(payload) {
+function extractOpenAiOutputText(payload) {
   if (payload.output_text) return payload.output_text;
 
   const message = payload.output?.find((item) => item.type === "message");
   const output = message?.content?.find((item) => item.type === "output_text");
   return output?.text || "";
+}
+
+function extractAnthropicOutputText(payload) {
+  const textBlock = payload.content?.find((item) => item.type === "text");
+  return textBlock?.text || "";
 }
