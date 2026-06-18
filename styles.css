@@ -25,12 +25,15 @@
 html {
   min-height: 100%;
   background: var(--bg);
+  overflow-x: hidden;
+  -webkit-text-size-adjust: 100%;
 }
 
 body {
   position: relative;
   min-height: 100%;
   margin: 0;
+  overflow-x: hidden;
   color: var(--ink);
   background:
     radial-gradient(circle at 14% 8%, rgba(255, 228, 94, 0.9) 0 76px, transparent 78px),
@@ -194,6 +197,7 @@ h3 {
 .album-section,
 .editor-pane,
 .album-view-card {
+  min-width: 0;
   background:
     linear-gradient(180deg, rgba(255, 254, 242, 0.94), rgba(255, 255, 255, 0.88)),
     var(--surface);
@@ -226,6 +230,10 @@ h3 {
   display: flex;
   flex-wrap: wrap;
   gap: 10px;
+}
+
+.cloud-actions > * {
+  flex: 1 1 142px;
 }
 
 .status-badge {
@@ -766,9 +774,13 @@ h3 {
 .icon-button,
 .back-button {
   min-height: 42px;
+  min-width: 0;
   border: 0;
   border-radius: var(--radius);
   font-weight: 900;
+  line-height: 1.2;
+  text-align: center;
+  white-space: normal;
 }
 
 .primary-action,
@@ -779,6 +791,7 @@ h3 {
   justify-content: center;
   gap: 8px;
   padding: 0 16px;
+  overflow-wrap: anywhere;
 }
 
 .primary-action {
@@ -1092,12 +1105,29 @@ h3 {
   font-weight: 850;
 }
 
-@media (max-width: 780px) {
+@media (max-width: 1040px) {
   .app-shell {
-    width: min(100% - 18px, 980px);
+    width: min(100% - 20px, 980px);
     padding-top: max(12px, env(safe-area-inset-top));
   }
 
+  .cloud-grid,
+  .capture-panel {
+    grid-template-columns: 1fr;
+  }
+
+  .cloud-actions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .album-grid,
+  .stats-strip {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 780px) {
   .topbar {
     grid-template-columns: auto minmax(0, 1fr);
   }
@@ -1106,22 +1136,6 @@ h3 {
     grid-column: 1 / -1;
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
-
-  .capture-panel {
-    grid-template-columns: 1fr;
-  }
-
-  .cloud-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .album-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
-  .stats-strip {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .field-grid,
@@ -1163,6 +1177,92 @@ h3 {
   .detail-actions {
     display: grid;
     grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 560px) {
+  .app-shell {
+    width: calc(100% - 12px);
+    padding-bottom: max(22px, env(safe-area-inset-bottom));
+  }
+
+  .topbar {
+    gap: 9px;
+    margin-bottom: 12px;
+  }
+
+  .brand-logo span {
+    width: 36px;
+    height: 36px;
+    font-size: 1.05rem;
+  }
+
+  h2 {
+    font-size: 1.12rem;
+  }
+
+  .overview-band,
+  .cloud-panel,
+  .capture-panel,
+  .album-section,
+  .editor-pane,
+  #albumView {
+    padding: 14px;
+    border-radius: 14px;
+  }
+
+  .section-heading {
+    align-items: stretch;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .status-badge {
+    align-self: flex-start;
+  }
+
+  .stats-strip {
+    gap: 7px;
+  }
+
+  .stats-strip div {
+    min-height: 64px;
+    padding: 9px;
+    border-radius: 12px;
+  }
+
+  .stats-strip span {
+    font-size: 1.25rem;
+  }
+
+  .stats-strip small {
+    margin-top: 5px;
+    font-size: 0.83rem;
+  }
+
+  .panel-copy,
+  .cloud-note {
+    font-size: 0.92rem;
+  }
+
+  .primary-action.large,
+  .secondary-action.large {
+    min-height: 50px;
+  }
+
+  .detail-dialog {
+    width: calc(100% - 12px);
+    max-height: calc(100vh - 14px);
+  }
+
+  .detail-content {
+    padding: 14px;
+  }
+
+  .toast {
+    right: 8px;
+    bottom: max(8px, env(safe-area-inset-bottom));
+    max-width: calc(100% - 16px);
   }
 }
 
