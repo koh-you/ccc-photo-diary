@@ -5,9 +5,11 @@ const BACKUP_VERSION = 2;
 const API_KEY_STORAGE_KEY = "ccc-openai-api-key";
 const API_MODEL_STORAGE_KEY = "ccc-openai-model";
 const CLOUD_EMAIL_STORAGE_KEY = "ccc-cloud-email";
+const THEME_STORAGE_KEY = "ccc-design-theme";
 const CLOUD_CONFIG_URL = "/api/config";
 const CLOUD_ENTRY_TABLE = "ccc_entries";
 const CLOUD_PHOTO_BUCKET = "ccc-photos";
+const DESIGN_THEMES = ["cube", "alpine", "drawer"];
 
 const categories = {
   food: {
@@ -186,6 +188,7 @@ document.addEventListener("DOMContentLoaded", init);
 async function init() {
   cacheElements();
   bindEvents();
+  applySavedTheme();
   renderCategoryFields();
   seedAiPrompt();
   loadSavedApiSettings();
@@ -208,6 +211,7 @@ function cacheElements() {
   elements.albumView = document.querySelector("#albumView");
   elements.editorView = document.querySelector("#editorView");
   elements.backButton = document.querySelector("#backButton");
+  elements.themeOptions = document.querySelectorAll("[data-theme-option]");
   elements.form = document.querySelector("#entryForm");
   elements.entryId = document.querySelector("#entryId");
   elements.editorTitle = document.querySelector("#editorTitle");
@@ -290,6 +294,7 @@ function cacheElements() {
 
 function bindEvents() {
   elements.backButton.addEventListener("click", handleBack);
+  elements.themeOptions.forEach((button) => button.addEventListener("click", handleThemeOptionClick));
   elements.form.addEventListener("submit", handleFormSubmit);
   elements.clearFormButton.addEventListener("click", () => resetForm());
   elements.cancelEditButton.addEventListener("click", () => {
@@ -333,6 +338,28 @@ function bindEvents() {
   elements.restoreEntryButton.addEventListener("click", handleRestoreEntry);
   elements.permanentDeleteButton.addEventListener("click", handlePermanentDelete);
   elements.detailDialog.addEventListener("close", clearDetailPhotoUrl);
+}
+
+function applySavedTheme() {
+  const savedTheme = localStorage.getItem(THEME_STORAGE_KEY);
+  applyTheme(DESIGN_THEMES.includes(savedTheme) ? savedTheme : "cube");
+}
+
+function handleThemeOptionClick(event) {
+  const theme = event.currentTarget.dataset.themeOption;
+  applyTheme(theme);
+  localStorage.setItem(THEME_STORAGE_KEY, theme);
+  showToast(`${event.currentTarget.textContent} 시안으로 전환했습니다.`);
+}
+
+function applyTheme(theme) {
+  const activeTheme = DESIGN_THEMES.includes(theme) ? theme : "cube";
+  document.body.dataset.theme = activeTheme;
+  elements.themeOptions.forEach((button) => {
+    const isActive = button.dataset.themeOption === activeTheme;
+    button.classList.toggle("is-active", isActive);
+    button.setAttribute("aria-pressed", String(isActive));
+  });
 }
 
 function openDatabase() {
