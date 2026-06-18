@@ -1930,3 +1930,328 @@ body::after {
     grid-template-columns: 1fr;
   }
 }
+
+/* Noble alpine refinement */
+:root {
+  --bg: #f7f8f5;
+  --surface: #fffefa;
+  --surface-strong: #eef3f2;
+  --ink: #111715;
+  --muted: #687270;
+  --line: #2e3837;
+  --moss: #707b63;
+  --moss-dark: #30382b;
+  --plum: #6d4355;
+  --coral: #a88d55;
+  --sun: #c9b47a;
+  --sea: #8fb2b8;
+  --lagoon: #c9ddde;
+  --danger: #9d4038;
+  --ridge: #84908d;
+  --ice: #edf4f3;
+  --snow: #ffffff;
+  --shadow: 0 20px 54px rgba(17, 23, 21, 0.08), 0 1px 0 rgba(255, 255, 255, 0.96) inset;
+  --radius: 7px;
+}
+
+body {
+  background:
+    linear-gradient(118deg, rgba(17, 23, 21, 0.035) 0 1px, transparent 1px 30%),
+    linear-gradient(162deg, #fbfbf7 0%, #f1f4f1 46%, #e4ebea 100%);
+  background-size: 320px 320px, auto;
+}
+
+body::before {
+  background:
+    repeating-linear-gradient(134deg, transparent 0 76px, rgba(17, 23, 21, 0.032) 77px 78px, transparent 79px 156px),
+    repeating-linear-gradient(24deg, transparent 0 110px, rgba(255, 255, 255, 0.72) 111px 112px, transparent 113px 212px);
+  opacity: 0.72;
+}
+
+body::after {
+  height: 34vh;
+  background:
+    linear-gradient(140deg, transparent 0 26%, rgba(255, 255, 255, 0.92) 26.2% 40%, transparent 40.2%),
+    linear-gradient(127deg, transparent 0 51%, rgba(188, 200, 198, 0.34) 51.2% 61%, transparent 61.2%);
+  opacity: 0.54;
+}
+
+.app-shell {
+  width: min(1040px, calc(100% - 32px));
+  padding-top: max(22px, env(safe-area-inset-top));
+}
+
+.topbar {
+  margin-bottom: 24px;
+}
+
+.eyebrow {
+  color: #7d8784;
+  font-size: 0.68rem;
+  font-weight: 850;
+  text-transform: uppercase;
+}
+
+h2 {
+  font-weight: 860;
+}
+
+.brand-logo {
+  gap: 7px;
+}
+
+.brand-logo span {
+  width: 42px;
+  height: 56px;
+  border-color: rgba(32, 38, 36, 0.52);
+  background:
+    linear-gradient(132deg, rgba(255, 255, 255, 0.96) 0 20%, transparent 20.4%),
+    linear-gradient(145deg, #ffffff 0%, #e8efee 58%, #a9b5b3 100%);
+  box-shadow:
+    0 16px 34px rgba(17, 23, 21, 0.11),
+    inset -6px -9px 0 rgba(17, 23, 21, 0.055),
+    inset 1px 1px 0 rgba(255, 255, 255, 0.95);
+  color: #111715;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 1.42rem;
+  font-weight: 700;
+}
+
+.brand-logo span:nth-child(2) {
+  background:
+    linear-gradient(132deg, rgba(255, 255, 255, 0.96) 0 20%, transparent 20.4%),
+    linear-gradient(145deg, #fffefa 0%, #e9ebe5 58%, #b9bcb3 100%);
+}
+
+.brand-logo span:nth-child(3) {
+  background:
+    linear-gradient(132deg, rgba(255, 255, 255, 0.96) 0 20%, transparent 20.4%),
+    linear-gradient(145deg, #ffffff 0%, #e4eeee 56%, #91a6a8 100%);
+}
+
+.overview-band,
+.cloud-panel,
+.capture-panel,
+.album-section,
+.editor-pane,
+.album-view-card {
+  border-color: rgba(46, 56, 55, 0.32);
+  border-radius: 10px;
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.96), rgba(248, 249, 246, 0.92)),
+    var(--surface);
+  box-shadow: var(--shadow);
+}
+
+.overview-band::before,
+.cloud-panel::before,
+.capture-panel::before,
+.album-section::before,
+.editor-pane::before,
+.album-view-card::before {
+  height: 1px;
+  background: linear-gradient(90deg, rgba(201, 180, 122, 0), rgba(201, 180, 122, 0.9), rgba(201, 180, 122, 0));
+}
+
+.overview-band,
+.cloud-panel,
+.capture-panel {
+  margin-bottom: 18px;
+}
+
+.status-badge {
+  border-color: rgba(46, 56, 55, 0.32);
+  background: rgba(255, 254, 250, 0.88);
+  box-shadow: inset 3px 0 0 rgba(201, 180, 122, 0.72);
+}
+
+.status-badge.is-online {
+  background: rgba(244, 248, 242, 0.88);
+  box-shadow: inset 3px 0 0 rgba(112, 123, 99, 0.72);
+}
+
+.status-badge.is-offline {
+  background: rgba(250, 245, 243, 0.9);
+  box-shadow: inset 3px 0 0 rgba(157, 64, 56, 0.72);
+}
+
+.stats-strip {
+  gap: 12px;
+}
+
+.stats-strip div,
+.stats-strip div:nth-child(2),
+.stats-strip div:nth-child(3),
+.stats-strip div:nth-child(4) {
+  border-color: rgba(46, 56, 55, 0.24);
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.88), rgba(242, 246, 245, 0.86));
+  box-shadow: inset 0 1px 0 rgba(201, 180, 122, 0.55), 0 14px 30px rgba(17, 23, 21, 0.045);
+}
+
+.stats-strip span {
+  font-weight: 780;
+}
+
+.stats-strip small {
+  font-weight: 780;
+}
+
+.capture-panel {
+  border-color: rgba(46, 56, 55, 0.36);
+  background:
+    linear-gradient(132deg, rgba(255, 255, 255, 0.96) 0 64%, rgba(237, 244, 243, 0.62) 64.2%),
+    var(--surface);
+}
+
+.album-card {
+  border-color: rgba(46, 56, 55, 0.26);
+  border-radius: 10px;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.94), rgba(248, 249, 246, 0.9));
+  box-shadow: 0 16px 38px rgba(17, 23, 21, 0.055);
+}
+
+.album-card:hover {
+  border-color: rgba(201, 180, 122, 0.92);
+  box-shadow: 0 18px 42px rgba(17, 23, 21, 0.09);
+}
+
+.album-cover {
+  border-radius: 8px;
+  background:
+    linear-gradient(128deg, transparent 0 42%, rgba(255, 255, 255, 0.82) 42.2% 48%, transparent 48.2%),
+    linear-gradient(146deg, #e8efee 0%, #ffffff 46%, #b6c3c1 100%);
+}
+
+.album-empty-icon {
+  border-color: rgba(46, 56, 55, 0.42);
+  background:
+    linear-gradient(132deg, rgba(255, 255, 255, 0.98) 0 22%, transparent 22.4%),
+    linear-gradient(146deg, #ffffff 0%, #edf4f3 58%, #9db0b0 100%);
+  box-shadow: 0 14px 28px rgba(17, 23, 21, 0.11), inset -6px -7px 0 rgba(17, 23, 21, 0.045);
+}
+
+.album-card.wine .album-empty-icon {
+  background:
+    linear-gradient(132deg, rgba(255, 255, 255, 0.98) 0 22%, transparent 22.4%),
+    linear-gradient(146deg, #fffafa 0%, #e7d5dc 56%, #8c6272 100%);
+}
+
+.album-card.culture .album-empty-icon {
+  background:
+    linear-gradient(132deg, rgba(255, 255, 255, 0.98) 0 22%, transparent 22.4%),
+    linear-gradient(146deg, #fffefa 0%, #eadfbf 56%, #9a814f 100%);
+}
+
+.album-card.math .album-empty-icon {
+  background:
+    linear-gradient(132deg, rgba(255, 255, 255, 0.98) 0 22%, transparent 22.4%),
+    linear-gradient(146deg, #fbfdf9 0%, #dfe8da 56%, #77836a 100%);
+}
+
+.photo-dropzone {
+  border-color: rgba(46, 56, 55, 0.34);
+  background:
+    repeating-linear-gradient(135deg, transparent 0 44px, rgba(17, 23, 21, 0.026) 45px 46px, transparent 47px 92px),
+    linear-gradient(135deg, rgba(245, 249, 248, 0.92), rgba(255, 255, 255, 0.96));
+}
+
+.metadata-panel,
+.ai-panel,
+.category-details {
+  border-color: rgba(46, 56, 55, 0.26);
+  border-radius: 10px;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.94), rgba(248, 249, 246, 0.9));
+}
+
+.field input,
+.field textarea,
+.field select,
+.search-field input {
+  border-color: rgba(46, 56, 55, 0.28);
+  background: rgba(255, 255, 255, 0.86);
+}
+
+.field input:focus,
+.field textarea:focus,
+.field select:focus,
+.search-field input:focus {
+  border-color: #b49c61;
+  box-shadow: 0 0 0 3px rgba(201, 180, 122, 0.16);
+}
+
+.primary-action {
+  border-color: #111715;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.08), transparent 50%),
+    linear-gradient(180deg, #27302f, #111715);
+  box-shadow: 0 10px 24px rgba(17, 23, 21, 0.14);
+}
+
+.secondary-action {
+  border-color: rgba(46, 56, 55, 0.38);
+  background: linear-gradient(180deg, #fffefa, #eef3f2);
+}
+
+.primary-action,
+.secondary-action,
+.danger-action,
+.ghost-button,
+.icon-button,
+.back-button {
+  border-radius: 6px;
+}
+
+.search-field,
+.entry-card,
+.detail-dialog {
+  border-color: rgba(46, 56, 55, 0.28);
+  border-radius: 10px;
+}
+
+.entry-card {
+  background: rgba(255, 255, 255, 0.82);
+  box-shadow: 0 10px 26px rgba(17, 23, 21, 0.04);
+}
+
+.entry-card:hover {
+  border-color: rgba(201, 180, 122, 0.78);
+  box-shadow: 0 14px 30px rgba(17, 23, 21, 0.075);
+}
+
+.category-badge,
+.date-badge,
+.tag-chip,
+.segment,
+.filter-pill {
+  border-radius: 999px;
+}
+
+.segment,
+.filter-pill {
+  border-color: rgba(46, 56, 55, 0.3);
+}
+
+.segment.is-active,
+.filter-pill.is-active {
+  background: #111715;
+}
+
+.detail-dialog::backdrop {
+  background: rgba(17, 23, 21, 0.46);
+}
+
+.toast {
+  background: linear-gradient(180deg, #27302f, #111715);
+  box-shadow: 0 18px 42px rgba(17, 23, 21, 0.2);
+}
+
+@media (max-width: 560px) {
+  .app-shell {
+    width: calc(100% - 14px);
+  }
+
+  .brand-logo span {
+    width: 34px;
+    height: 44px;
+  }
+}

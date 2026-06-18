@@ -3,9 +3,9 @@
   "short_name": "CCC",
   "start_url": "./index.html",
   "display": "standalone",
-  "background_color": "#eef4f6",
-  "theme_color": "#101820",
-  "description": "Capture, Crop, Carving. A sharp alpine archive for photos, context, and reflection.",
+  "background_color": "#f7f8f5",
+  "theme_color": "#111715",
+  "description": "Capture, Crop, Carving. A noble alpine archive for photos, context, and reflection.",
   "icons": [
     {
       "src": "./icon.svg",
