@@ -10,7 +10,7 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
     <script src="./app.js" defer></script>
   </head>
-  <body>
+  <body data-theme="cube">
     <div class="app-shell">
       <header class="topbar">
         <button class="back-button" id="backButton" type="button" hidden>←</button>
@@ -29,13 +29,6 @@
         </div>
         <input id="backupInput" type="file" accept="application/json" hidden />
       </header>
-
-      <nav class="design-switcher" aria-label="디자인 시안 선택">
-        <span>Design</span>
-        <button class="theme-option is-active" type="button" data-theme-option="cube">White Cube</button>
-        <button class="theme-option" type="button" data-theme-option="alpine">Alpine Sheet</button>
-        <button class="theme-option" type="button" data-theme-option="drawer">Field Drawer</button>
-      </nav>
 
       <main>
         <section class="view is-active" id="homeView" aria-labelledby="homeTitle">
