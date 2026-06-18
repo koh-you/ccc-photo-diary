@@ -1255,9 +1255,16 @@ async function initCloud() {
       }
     });
 
+    const redirectSession = await consumeCloudAuthRedirect();
+    if (redirectSession) {
+      cloudSession = redirectSession;
+      updateCloudUi("Cloud", "로그인이 완료되었습니다. 이제 저장할 때 Supabase에 자동 보관됩니다.");
+      showToast("클라우드 로그인이 완료되었습니다.");
+    }
+
     const { data, error } = await supabaseClient.auth.getSession();
     if (error) throw error;
-    cloudSession = data.session || null;
+    cloudSession = data.session || cloudSession || null;
 
     supabaseClient.auth.onAuthStateChange((_event, session) => {
       cloudSession = session || null;
@@ -1398,6 +1405,38 @@ async function handleCloudPush() {
   } finally {
     cloudBusy = false;
     updateCloudUi();
+  }
+}
+
+async function consumeCloudAuthRedirect() {
+  if (!supabaseClient) return null;
+
+  const params = new URLSearchParams(window.location.search || "");
+  const hashText = window.location.hash?.startsWith("#") ? window.location.hash.slice(1) : window.location.hash || "";
+  const hashParams = new URLSearchParams(hashText);
+  const code = params.get("code") || hashParams.get("code");
+  const accessToken = hashParams.get("access_token");
+
+  if (!code && !accessToken) return null;
+
+  updateCloudUi("Auth", "로그인 링크를 처리하는 중입니다.");
+
+  if (code && typeof supabaseClient.auth.exchangeCodeForSession === "function") {
+    const { data, error } = await supabaseClient.auth.exchangeCodeForSession(code);
+    if (error) throw error;
+    clearCloudAuthUrl();
+    return data.session || null;
+  }
+
+  const { data, error } = await supabaseClient.auth.getSession();
+  if (error) throw error;
+  clearCloudAuthUrl();
+  return data.session || null;
+}
+
+function clearCloudAuthUrl() {
+  if (window.history?.replaceState) {
+    window.history.replaceState(null, "", `${window.location.origin}${window.location.pathname}`);
   }
 }
 
@@ -1634,9 +1673,7 @@ function readCloudAuthRedirectNotice() {
 
   if (!error && !errorCode && !description) return null;
 
-  if (window.history?.replaceState) {
-    window.history.replaceState(null, "", `${window.location.origin}${window.location.pathname}`);
-  }
+  clearCloudAuthUrl();
 
   if (errorCode === "otp_expired" || /expired/i.test(description || "")) {
     return {
